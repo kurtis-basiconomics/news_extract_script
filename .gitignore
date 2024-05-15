@@ -1,0 +1,19 @@
+# Ignore all .env files
+*.env
+
+ssh_access.txt
+
+basiconomics-db-vm-ssh.txt
+
+test_scrape.ipynb
+
+news_summarize.ipynb
+
+news_scrapeBlm.ipynb
+
+news_scrapeWSJ_MKW.ipynb
+
+news_data/
+
+api_keys/
+
