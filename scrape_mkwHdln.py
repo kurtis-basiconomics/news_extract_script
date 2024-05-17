@@ -5,7 +5,6 @@ var_tblName = 'news_mkw'
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537'}
 
-client = ZenRowsClient(open(news_variables.path_zenrowsKeyMaster, 'r').read().strip('\n'))
 list_url = ['https://www.marketwatch.com/', 'https://www.marketwatch.com/markets', 'https://www.marketwatch.com/investing', 'https://www.marketwatch.com/economy-politics']
 
 
