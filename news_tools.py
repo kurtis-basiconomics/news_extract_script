@@ -31,7 +31,7 @@ from openai import OpenAI
 import news_connectSQL
 
 
-client = ZenRowsClient(open(news_variables.path_zenrowsKeyMaster, 'r').read().strip('\n'))
+client = ZenRowsClient(news_connectSQL.var_zenrowsAPI) # ZenRowsClient(open(news_variables.path_zenrowsKeyMaster, 'r').read().strip('\n'))
 
 
 pattern = re.compile(r'\n[^\n]*\n')
