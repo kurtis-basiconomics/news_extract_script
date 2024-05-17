@@ -1,9 +1,6 @@
 from news_tools import *
 
 
-client = ZenRowsClient(open(news_variables.path_zenrowssKeykcgmail, 'r').read().strip('\n'))
-
-
 var_tblName = 'news_glb'
 
 
