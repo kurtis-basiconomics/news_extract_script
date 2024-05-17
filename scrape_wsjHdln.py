@@ -45,7 +45,7 @@ for var_dt in list_dt:
 
             # Find all elements containing 'WSJTheme--story' in their class
             articles = soup.find_all(lambda tag: tag.name == 'article' and 'WSJTheme--story' in ' '.join(tag.get('class', [])))
-            print(articles)
+            # print(articles)
 
             # Extract data
             news_items = []
@@ -55,27 +55,21 @@ for var_dt in list_dt:
                     headline_element = article.find(lambda tag: tag.name == 'span' and 'WSJTheme--headline' in ' '.join(tag.get('class', [])))
                     url_element = article.find('a')
 
-                    print(headline_elements)
+                    var_title = headline_element.text
+                    var_url = url_element['href']
+                    var_dataId = article.get('data-id', None)
 
-                    if headline_element and url_element:
+                    var_url = var_url.split('?')[0]
+                    
+                    df_var = pd.DataFrame([[var_title, var_url, var_dataId, var_dt.strftime('%Y-%m-%d')]], columns = list_cols)
+                    if var_url not in df_hdlnNew.news_url.unique():
+                        df_hdlnNew = pd.concat([df_hdlnNew, df_var], ignore_index=True)
 
-                        print(headline_element)
-
-                        var_title = headline_element.text
-                        var_url = url_element['href']
-                        var_dataId = article.get('data-id', None)
-
-                        var_url = var_url.split('?')[0]
-                        
-                        df_var = pd.DataFrame([[var_title, var_url, var_dataId, var_dt.strftime('%Y-%m-%d')]], columns = list_cols)
-                        if var_url not in df_hdlnNew.news_url.unique():
-                            df_hdlnNew = pd.concat([df_hdlnNew, df_var], ignore_index=True)
-
-                        # Upload Headline to SQL
-                        if news_connectSQL.checkNewsUrlInTbl(var_tblName, var_url):
-                            df_var['created_at'] = datetime.now()
-                            news_connectSQL.uploadSQLQuery(df_var, var_tblName)  
-                            print(var_baseUrl, var_url, var_title)      
+                    # Upload Headline to SQL
+                    if news_connectSQL.checkNewsUrlInTbl(var_tblName, var_url):
+                        df_var['created_at'] = datetime.now()
+                        news_connectSQL.uploadSQLQuery(df_var, var_tblName)  
+                        print(var_baseUrl, var_url, var_title)      
 
                     else:
                         print("Missing headline or URL in an article.")
