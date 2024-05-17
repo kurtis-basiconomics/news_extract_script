@@ -34,20 +34,20 @@ except Exception as e:
 
 try:
     import scrape_fp
-    print('scrape WSJ complete')
+    print('scrape FP complete')
 except Exception as e:
-    print('WSJ scrape with error:  ', e)
+    print('FP scrape with error:  ', e)
 
 
 try:
     import scrape_glb
-    print('scrape Marketwatch complete')
+    print('scrape GlobeAndMail complete')
 except Exception as e:
-    print('Marketwatch scrape with error:  ', e)
+    print('GlobeAndMail scrape with error:  ', e)
 
 
 try:
     import scrape_scm
-    print('scrape CNBC complete')
+    print('scrape South China complete')
 except Exception as e:
-    print('CNBC scrape with error:  ', e)
+    print('South China scrape with error:  ', e)
