@@ -21,17 +21,18 @@ azure_client_secret = os.getenv("AZURE_CLIENT_SECRET")
 key_vault_name = os.getenv("KEY_VAULT_NAME")
 
 
-
-
 # extract azure vault related credentials
 key_vault_url = "https://basiconomics-db-cred.vault.azure.net/"
 credential = DefaultAzureCredential()
-client = SecretClient(vault_url=key_vault_url, credential=credential)
+az_client = SecretClient(vault_url=key_vault_url, credential=credential)
 
-safe_password = quote_plus( client.get_secret("basiconomics-db-pw").value ) 
-safe_username = quote_plus( client.get_secret("basiconomics-db-user").value ) 
+safe_password = quote_plus( az_client.get_secret("basiconomics-db-pw").value ) 
+safe_username = quote_plus( az_client.get_secret("basiconomics-db-user").value ) 
+
+var_zenrowsAPI = az_client.get_secret("zenrows-api").value
 
 ssl_cert_path = 'certs/DigiCertGlobalRootCA.crt.pem'
+
 
 
 # Database credentials and configuration
