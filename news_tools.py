@@ -66,7 +66,7 @@ def uploadGithubBackup(df_var, var_tblName, **argsUploadGithubBackup):
         df_var.to_csv(df_output, index=False)
 
         # Replace 'your_token' with your GitHub access token
-        g = Github(open( news_variables.path_githubKey , 'r').read().strip('\n'))
+        g = Github( news_connectSQL.var_githubToken )
 
         # Get the repository
         repo = g.get_repo(news_variables.var_githubRepo_scrape)
