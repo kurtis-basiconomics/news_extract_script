@@ -27,6 +27,7 @@ if response.status_code == 200:
             try:
                 var_title = var_element.find('span', attrs={'data-qa': 'ContentHeadline-Headline'}).text 
                 var_url = var_element['href']
+                var_url = var_url.split('?')[0]
                 if var_baseUrl not in var_url: var_url = var_baseUrl[ : -1] + var_url
 
                 df_var = pd.DataFrame([[var_url, var_title ]], columns = df_hdlnNew.columns)
@@ -60,6 +61,7 @@ for var_url_1 in [var_baseUrl_1, var_baseUrl_2]:
             try:
                 var_title = var_element.text
                 var_url = var_element.find('a')['href']
+                var_url = var_url.split('?')[0]
                 if var_baseUrl not in var_url: var_url = var_baseUrl[ : -1] + var_url
 
                 df_var = pd.DataFrame([[var_url, var_title ]], columns = df_hdlnNew.columns)
