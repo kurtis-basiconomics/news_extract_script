@@ -30,6 +30,14 @@ safe_password = quote_plus( az_client.get_secret("basiconomics-db-pw").value )
 safe_username = quote_plus( az_client.get_secret("basiconomics-db-user").value ) 
 
 var_zenrowsAPI = az_client.get_secret("zenrows-api").value
+var_zenrowsAPI_wsjmkw = az_client.get_secret("zenrows-api-wsjmkw").value
+
+var_githubToken = az_client.get_secret("github-token-news-backup").value
+
+var_openai_summmary = az_client.get_secret("openai-summary").value
+var_openai_category = az_client.get_secret("openai-category").value
+var_openai_profile = az_client.get_secret("openai-profile").value 
+var_openai_articleId = az_client.get_secret("openai-articleId").value 
 
 ssl_cert_path = 'certs/DigiCertGlobalRootCA.crt.pem'
 
