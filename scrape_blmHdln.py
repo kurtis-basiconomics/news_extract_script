@@ -23,7 +23,8 @@ df_hdlnNew = pd.DataFrame(columns = ['news_title', 'news_url', 'headline_date'])
 
 print('\n\n', var_tblName, 'downloading headlines')
 
-response = client.get(var_baseUrl)
+var_rspn, var_outputStrZenrows = getZenrowsResponse(var_baseUrl, 0)
+response = var_rspn
 
 if response.status_code == 200:
     soup = BeautifulSoup(response.content, 'html.parser')
@@ -79,7 +80,8 @@ for var_baseUrl_sub in list_blmSubHdln:
 
     print('\n\n', var_baseUrl_sub, ' Sub downloading headlines')
     
-    response = client.get(var_baseUrl_sub)
+    var_rspn, var_outputStrZenrows = getZenrowsResponse(var_baseUrl_sub, 0)
+    response = var_rspn
 
     if response.status_code == 200:
         soup = BeautifulSoup(response.content, 'html.parser')
@@ -124,4 +126,4 @@ try:
 except Exception as e:
     print('\n\n', var_tblName, 'export to csv with error:  ', e)
 
-print('\n\n', getDataInfo(var_tblName, date_from = (datetime.today() - timedelta(days = 5)).strftime('%Y-%m-%d') ) )
+print('\n\n', getDataInfo(var_tblName ) )
