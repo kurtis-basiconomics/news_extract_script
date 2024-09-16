@@ -1,4 +1,5 @@
 import logging
+from news_tools import getDataInfoSumm
 
 # Configure logging
 logging.basicConfig(filename='script.log', level=logging.INFO, 
@@ -55,7 +56,11 @@ def main():
     except Exception as e:
         print('South China scrape with error:  ', e)
 
+    getDataInfoSumm()
+
     logging.info("Script finished")
 
 if __name__ == "__main__":
     main()
+
+
