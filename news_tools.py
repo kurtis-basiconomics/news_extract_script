@@ -371,7 +371,7 @@ def getDataInfoSumm():
     var_bodyText =  df_output.to_string()
     var_bodyText = '        ' + var_bodyText
 
-    df_var = df_output.loc[pd.to_datetime(df_output.most_recent_date).dt.date >= datetime.today().date()]
+    df_var = df_output.loc[pd.to_datetime(df_output.latest_date).dt.date >= datetime.today().date()]
     var_countTdy = len(df_var.loc[df_var.count_today_not_blank > 0])
 
     sendEmail('kurtis@kgchua.com', getDataInfoTitle(var_countTdy),  var_bodyText)
@@ -1057,4 +1057,5 @@ def getSummNews(list_url):
         print(var_url)
         print(var_keyPpl, '; ', var_keyRgn, '; ', var_keyOrg)
         print(var_summ, '\n\n')
+
 
