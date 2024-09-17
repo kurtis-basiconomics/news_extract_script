@@ -59,9 +59,7 @@ list_colsDataInfo = ['news_source', 'most_recent_date', 'oldest_date', 'number_o
 
 list_removeKeywords = ["corp", "inc", "corporation", "ltd", "capital", "plc", "the", "tech", "technologies", "technology", 'services', 'enterprices', 'group', 'systèmes', 'company', 'companies', 'incorporated']
 
-
-
-# list_ctgrKeys = ['news_type', 'key_paragraph', 'key_region', 'key_people', 'key_organizations', 'recommended_headline']
+list_ctgrKeys = ['news_type', 'key_paragraph', 'key_region', 'key_people', 'key_organizations', 'recommended_headline']
 
 list_hdrs = ['user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gecko/20100101 Firefox/104.0',
     'user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15',
@@ -73,6 +71,10 @@ list_hdrs = ['user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gec
 
 
 # ================================ email sender ================================
+
+def getSracpeEmailRprtText(var_runName):
+    var_text = f"""Run of table {list_ctgrKeys} in server failed"""
+    return var_text;
 
 
 def sendEmail(var_receiverEmail, var_emailSbj, var_emailBody ):

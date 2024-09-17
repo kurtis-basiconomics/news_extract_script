@@ -1,17 +1,53 @@
 from news_tools import *
 
+var_tblName = 'news_blm'
 
-var_tblName = 'news_wsj'
-var_tblName_1 = 'news_mkw'
+# Function to recursively find all "type": "text" key-value pairs
+def find_all_text_types(data):
+    results = []
+    if isinstance(data, dict):
+        if data.get('type') == 'text':
+            results.append(data.get('value'))
+        for key, value in data.items():
+            results.extend(find_all_text_types(value))
+    elif isinstance(data, list):
+        for item in data:
+            results.extend(find_all_text_types(item))
+    return results
+
+
+def getTextFromScript(script_tags):
+
+    # Iterate over script tags to find JSON data and extract text values
+    text_values = []
+    for script_tag in script_tags:
+        try:
+            json_data = json.loads(script_tag.string)
+            text_values.extend(find_all_text_types(json_data))
+        except (json.JSONDecodeError, TypeError):
+            continue
+
+    var_fullText = ''                
+    for text_value in text_values:
+        try:
+            var_paragraph = text_value
+            if var_paragraph != '':
+                var_fullText += var_paragraph
+        except:
+            pass
+    
+    return var_fullText;
+
 
 
 var_upldOk = 'y'
 
 
-# downloading urls to scrape for WSJ
 list_strExcl = news_connectSQL.downloadSQLQuery('news_exclusions', check_value = var_tblName.replace('news_', '') , check_col = 'news_source' ).table_string.tolist()
 
-df_sql = news_connectSQL.downloadSQLQuery(var_tblName, date_col = 'created_at', date_from = '2024-07-01' )
+
+# driver = webdriver.Chrome(service=s, options=options)
+df_sql = news_connectSQL.downloadSQLQuery(var_tblName, date_col = 'created_at', date_from = '2024-07-01')
 
 mask = df_sql['news_url'].apply(lambda x: not any(substring in x for substring in list_strExcl))
 
@@ -19,69 +55,76 @@ df_sql = df_sql[
     (pd.isna(df_sql.news_text) | (df_sql.news_text.isna() )) & 
     mask
     ]
-
-df_sql['news_url'] = df_sql.news_url.str.split('?').str[0]
-df_sql.drop_duplicates(subset = ['news_url'], keep = 'first', inplace = True, ignore_index = True)
-
 df_sql.sort_values(by = 'headline_date' , ascending = False, ignore_index = True, inplace = True)
 
-# downloading urls to scrape for MKW
-list_strExcl_1 = news_connectSQL.downloadSQLQuery('news_exclusions', check_value = var_tblName_1.replace('news_', '') , check_col = 'news_source' ).table_string.tolist()
-
-df_sql_1 = news_connectSQL.downloadSQLQuery(var_tblName_1, date_col = 'created_at', date_from = var_dtFrAnalysis )
-
-mask_1 = df_sql_1['news_url'].apply(lambda x: not any(substring in x for substring in list_strExcl_1))
-
-df_sql_1 = df_sql_1[ 
-    (pd.isna(df_sql_1.news_text) | (df_sql_1.news_text.isna() )) & 
-    mask_1
-    ]
-
-df_sql_1['news_url'] = df_sql_1.news_url.str.split('?').str[0]
-df_sql_1.drop_duplicates(subset = ['news_url'], keep = 'first', inplace = True, ignore_index = True)
-
-df_sql_1.sort_values(by = 'headline_date' , ascending = False, ignore_index = True, inplace = True)
-
-
-df_sql = pd.concat([df_sql.iloc[ : 350], df_sql_1.iloc[ : 350] ], ignore_index = True)
-
 list_urlDwld = df_sql.news_url.unique()
-print(var_tblName, ' and ', var_tblName_1, len(list_urlDwld) , ' to analyse')
 
+# for var_url in list_urlDwld:
+#     print(var_url)
 
-var_i = 0
 var_len = len(list_urlDwld)
+var_i = 0
+
+
+print(str(len(list_urlDwld)), ' articles to scrape' )
 
 for var_url in list_urlDwld:
+    var_i += 1
+    var_counterStr = f"""{str(var_i)} of {str(var_len)} """
 
+    var_outputStr = var_counterStr + ' ' + var_url + ' '
 
-    var_i = var_i + 1
-    var_counterStr = str(var_i) + ' of ' + str(var_len) + ' '
-
-    var_outputStr = var_counterStr + var_url + ' '
-        
     try:
-
-        var_rspn, var_outputStrZenrows = getZenrowsResponse(var_url, 2)
-        var_outputStr += var_outputStrZenrows
+        var_rspn, var_outputStrZenrows = getZenrowsResponse(var_url, 0)
 
         if var_rspn.status_code == 200:
-            var_fullText = getResponceToTextWsj(var_rspn)
+            
+            # Assuming var_rspn.content contains the HTML content
+            soup = BeautifulSoup(var_rspn.content, 'html.parser')
 
-            if 'https://www.wsj.com/' in var_url:
-                var_tblUpld = var_tblName
-            elif'https://www.marketwatch.com/' in var_url:
-                var_tblUpld = var_tblName_1
-                        
-            if var_fullText != '' and var_fullText is not None:
-                var_outputStr += news_connectSQL.replaceSQLQuery(var_tblUpld, 'news_url', var_url, ['news_text'], [var_fullText], upload_to_sql = var_upldOk)
-                var_outputStr += ' PRINTED'
+            # get article text
+            var_fullText = ''
+            try:
+                script_tags = soup.find_all('script')
+                var_fullText = getTextFromScript(script_tags)
+                if (var_fullText != '') and (var_fullText is not None):
+                    var_outputStr += ' text extract success '
+                    if (var_upldOk == 'y') or (var_upldOk == 'yes'):
+                        try:
+                            news_connectSQL.replaceSQLQuery(var_tblName, 'news_url', var_url, 'news_text', var_fullText, upload_to_sql = var_upldOk)
+                            var_outputStr += 'PRINTED'
+                        except:
+                            var_outputStr += 'UPLOAD FAILED'
+                else:
+                    var_outputStr += ' text extract failed with empty text '
+            except:
+                var_outputStr += ' text extract FAILED '
+                pass
+            var_outputStr += '; '
+
+            var_dt = pd.NaT
+            try:
+                var_dt = pd.to_datetime( soup.find_all('time')[0]['datetime'] )
+                if (var_dt != pd.NaT):
+                    var_outputStr += ' date extract success; '
+                    if (var_upldOk == 'y') or (var_upldOk == 'yes'):
+                        try:
+                            news_connectSQL.replaceSQLQuery(var_tblName, 'news_url', var_url, 'headline_date', var_dt, upload_to_sql = var_upldOk)
+                            var_outputStr += 'PRINTED'
+                        except:
+                            var_outputStr += 'UPLOAD FAILED '
+                else:
+                    var_outputStr += ' date extract failed with nan '                            
+            except:
+                var_outputStr += ' date extract FAILED '
+                pass
 
         else:
-            var_outputStr += ' response NOT 200'
-
-
+            var_outputStr += ' not getting response 200'
+    
     except:
-        var_outputStr += ' with error'
+        var_outputStr += ' error on process'
 
     print(var_outputStr)
+
+    
