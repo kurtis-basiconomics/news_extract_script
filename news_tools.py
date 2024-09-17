@@ -53,6 +53,7 @@ var_ctgrNewsDaydDelta = 10
 var_iLen = 7
 
 pattern = re.compile(r'\n[^\n]*\n')
+var_splitPattern = r'(?<=[a-z])(?=[A-Z])'
 list_colsDataInfo = ['news_source', 'most_recent_date', 'oldest_date', 'number_of_today', 'count_today_not_blank', 'total_not_blank', 'extract_time']
 
 
@@ -359,8 +360,10 @@ def getDataInfoSumm():
     df_output = pd.DataFrame()
     for var_tblName in list_newsSource:
         df_var = getDataInfo(var_tblName)
+        df_var['extract_time'] = datetime.now()
         df_output = pd.concat([df_var, df_output], ignore_index = True)
-    for var_col in ['most_recent_date', 'oldest_date', 'extract_time']:
+
+    for var_col in ['latest_date', 'earliest_date']:
         df_output[var_col] = pd.to_datetime(df_output[var_col]).dt.date
 
     var_bodyText =  df_output.to_string()
@@ -455,6 +458,18 @@ def chatgpt_initial_message(var_intial_message):
 # --------------------------------- DATA CLEANING FUNCTIONS ---------------------------------
 
 
+def split_names(text):
+    
+    # Split the text using the pattern
+    names = re.split(var_splitPattern, text)
+    
+    # Join the names with a comma and a space
+    result = ', '.join(names)
+    
+    return result
+
+
+
 def convert_to_datetime(entry):
     # Check for absolute date pattern (e.g., "December 25 2022")
     try:
@@ -502,12 +517,12 @@ def clean_text(text):
 
 
 
-# Function to remove keywords from the string
+# Function to remvaove keywords from the string
 def remove_keywords(input_string):
 
-    pattern = re.compile(r'\b(' + '|'.join(list_removeKeywords) + r')\b', re.IGNORECASE)
+    var_rmvKywdPattern = re.compile(r'\b(' + '|'.join(list_removeKeywords) + r')\b', re.IGNORECASE)
     words_list = input_string.split(' ')
-    filtered_words_list = [pattern.sub('', word).strip() for word in words_list]
+    filtered_words_list = [var_rmvKywdPattern.sub('', word).strip() for word in words_list]
     return ' '.join(filtered_words_list)
 
 
@@ -1040,3 +1055,4 @@ def getSummNews(list_url):
         print(var_url)
         print(var_keyPpl, '; ', var_keyRgn, '; ', var_keyOrg)
         print(var_summ, '\n\n')
+

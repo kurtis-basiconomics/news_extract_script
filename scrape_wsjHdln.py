@@ -38,14 +38,14 @@ for var_dt in list_dt:
     # print(str(var_x), ' of ', str(len(list_dt)) , URL)
     try:
         # response = requests.get(URL, headers=headers)
-        response = client.get(var_baseUrl)
+        response, var_outputStrZenrows = getZenrowsResponse(var_baseUrl, 0, use_chatgpt = 'zenrows-api')
 
         if response.status_code == 200:
             soup = BeautifulSoup(response.content, 'html.parser')
 
             # Find all elements containing 'WSJTheme--story' in their class
             articles = soup.find_all(lambda tag: tag.name == 'article' and 'WSJTheme--story' in ' '.join(tag.get('class', [])))
-            # print(articles)
+            print(articles)
 
             # Extract data
             news_items = []
@@ -94,7 +94,7 @@ for var_dt in list_dt:
 
 
 for var_baseUrl_sub in list_wsjSumHdln:
-    response = requests.get(var_baseUrl_sub, headers=headers)
+    response, var_outputStrZenrows = getZenrowsResponse(var_baseUrl_sub, 0, use_chatgpt = 'zenrows-api')
     # response = client.get(var_baseUrl)
 
     if response.status_code == 200:

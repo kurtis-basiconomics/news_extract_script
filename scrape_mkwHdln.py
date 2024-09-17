@@ -2,6 +2,7 @@ from news_tools import *
 
 var_tblName = 'news_mkw'
 
+var_splitPattern = r'(?<=[a-z])(?=[A-Z])'
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537'}
 
@@ -14,7 +15,7 @@ print('\n\n', var_tblName, 'downloading headlines')
 for var_baseUrl in list_url:
     # response = requests.get(var_baseUrl, headers=headers)
     print(var_baseUrl, ' start headline extract')
-    response = client.get(var_baseUrl)
+    response, var_outputStrZenrows = getZenrowsResponse(var_baseUrl, 0, use_chatgpt = 'zenrows-api')
 
 
     if response.status_code == 200:
@@ -31,6 +32,10 @@ for var_baseUrl in list_url:
                 
                 # Extract the text, stripping extra whitespace
                 var_title = var_element.get_text(strip=True)
+                try:
+                    var_title = re.split(var_splitPattern, var_title)[0]
+                except:
+                    pass
                 
                 var_dt = pd.NaT
                 if var_element.get('data-timestamp'):
