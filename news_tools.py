@@ -54,7 +54,7 @@ var_iLen = 7
 
 pattern = re.compile(r'\n[^\n]*\n')
 var_splitPattern = r'(?<=[a-z])(?=[A-Z])'
-list_colsDataInfo = ['news_source', 'most_recent_date', 'oldest_date', 'number_of_today', 'count_today_not_blank', 'total_not_blank', 'extract_time']
+# list_colsDataInfo = ['news_source', 'most_recent_date', 'oldest_date', 'number_of_today', 'count_today_not_blank', 'total_not_blank', 'extract_time']
 
 
 list_removeKeywords = ["corp", "inc", "corporation", "ltd", "capital", "plc", "the", "tech", "technologies", "technology", 'services', 'enterprices', 'group', 'systèmes', 'company', 'companies', 'incorporated']
@@ -372,7 +372,7 @@ def getDataInfoSumm():
     var_bodyText = '        ' + var_bodyText
 
     df_var = df_output.loc[pd.to_datetime(df_output.latest_date).dt.date >= datetime.today().date()]
-    var_countTdy = len(df_var.loc[df_var.count_today_not_blank > 0])
+    var_countTdy = len(df_var.loc[df_var.with_text_today > 0])
 
     sendEmail('kurtis@kgchua.com', getDataInfoTitle(var_countTdy),  var_bodyText)
 
