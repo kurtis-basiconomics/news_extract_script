@@ -1,8 +1,6 @@
 import logging
-from news_tools import getDataInfoSumm, getSracpeEmailRprtText, sendEmail
-
-
-var_receiverEmail = 'kurtis@kgchua.com'
+from news_tools import getDataInfoSumm, getSracpeEmailRprtText, sendEmail, var_receiverEmail
+from datetime import datetime
 
 # Configure logging
 logging.basicConfig(filename='script.log', level=logging.INFO, 
@@ -12,20 +10,11 @@ def main():
     logging.info("Script started")
 
     try:
-        import scrape_blmHdln
-        print('scrape Bloomberg complete')
-    except Exception as e:
-        print('Bloomberg scrape with error:  ', e)
-        var_text = getSracpeEmailRprtText('scrape_blmHdln')
-        sendEmail(var_receiverEmail, var_text, var_text )
-
-
-    try:
         import scrape_wsjHdln
         print('scrape WSJ complete')
     except Exception as e:
         print('WSJ scrape with error:  ', e)
-        var_text = getSracpeEmailRprtText('scrape_wsjHdln')
+        var_text = getSracpeEmailRprtText('scrape_wsjHdln', datetime.now())
         sendEmail(var_receiverEmail, var_text, var_text )
 
     try:
@@ -33,7 +22,7 @@ def main():
         print('scrape Marketwatch complete')
     except Exception as e:
         print('Marketwatch scrape with error:  ', e)
-        var_text = getSracpeEmailRprtText('scrape_mkwHdln')
+        var_text = getSracpeEmailRprtText('scrape_mkwHdln', datetime.now())
         sendEmail(var_receiverEmail, var_text, var_text )
         
     try:
@@ -41,15 +30,39 @@ def main():
         print('scrape CNBC complete')
     except Exception as e:
         print('CNBC scrape with error:  ', e)
-        var_text = getSracpeEmailRprtText('scrape_cnb')
+        var_text = getSracpeEmailRprtText('scrape_cnb', datetime.now())
         sendEmail(var_receiverEmail, var_text, var_text )
-        
+
+    try:
+        import scrape_blmHdln
+        print('scrape Bloomberg complete')
+    except Exception as e:
+        print('Bloomberg scrape with error:  ', e)
+        var_text = getSracpeEmailRprtText('scrape_blmHdln', datetime.now())
+        sendEmail(var_receiverEmail, var_text, var_text )
+
+    try:
+        import scrape_blmText
+        print('scrape Bloomberg complete')
+    except Exception as e:
+        print('Bloomberg scrape with error:  ', e)
+        var_text = getSracpeEmailRprtText('scrape_blmText', datetime.now())
+        sendEmail(var_receiverEmail, var_text, var_text )
+
+    try:
+        import scrape_scm
+        print('scrape South China complete')
+    except Exception as e:
+        print('South China scrape with error:  ', e)
+        var_text = getSracpeEmailRprtText('scrape_scm', datetime.now())
+        sendEmail(var_receiverEmail, var_text, var_text )
+
     try:
         import scrape_ft
         print('scrape FT complete')
     except Exception as e:
         print('FT scrape with error:  ', e)
-        var_text = getSracpeEmailRprtText('scrape_ft')
+        var_text = getSracpeEmailRprtText('scrape_ft', datetime.now())
         sendEmail(var_receiverEmail, var_text, var_text )
         
     try:
@@ -57,7 +70,7 @@ def main():
         print('scrape FP complete')
     except Exception as e:
         print('FP scrape with error:  ', e)
-        var_text = getSracpeEmailRprtText('scrape_fp')
+        var_text = getSracpeEmailRprtText('scrape_fp', datetime.now())
         sendEmail(var_receiverEmail, var_text, var_text )
         
     try:
@@ -65,7 +78,7 @@ def main():
         print('scrape GlobeAndMail complete')
     except Exception as e:
         print('GlobeAndMail scrape with error:  ', e)
-        var_text = getSracpeEmailRprtText('scrape_glb')
+        var_text = getSracpeEmailRprtText('scrape_glb', datetime.now())
         sendEmail(var_receiverEmail, var_text, var_text )
         
     try:
@@ -73,8 +86,9 @@ def main():
         print('scrape South China complete')
     except Exception as e:
         print('South China scrape with error:  ', e)
-        var_text = getSracpeEmailRprtText('scrape_scm')
+        var_text = getSracpeEmailRprtText('scrape_scm', datetime.now())
         sendEmail(var_receiverEmail, var_text, var_text )
+
         
     getDataInfoSumm()
 
@@ -82,5 +96,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-

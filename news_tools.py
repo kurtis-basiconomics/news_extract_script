@@ -48,6 +48,8 @@ var_githubToken = news_connectSQL.var_githubToken
 var_dtFrAnalysis = '2024-07-01'
 var_tgtAudienceMaster = 'gen z and millenials'
 var_ctgrNewsDaydDelta = 10
+var_receiverEmail = 'kurtis@kgchua.com'
+var_nbrCtGrAnsSummAnalysis = 350
 
 # max tries for scraping
 var_iLen = 7
@@ -59,7 +61,11 @@ var_splitPattern = r'(?<=[a-z])(?=[A-Z])'
 
 list_removeKeywords = ["corp", "inc", "corporation", "ltd", "capital", "plc", "the", "tech", "technologies", "technology", 'services', 'enterprices', 'group', 'systèmes', 'company', 'companies', 'incorporated']
 
+# variables for news_articleFunc
 list_ctgrKeys = ['news_type', 'key_paragraph', 'key_region', 'key_people', 'key_organizations', 'recommended_headline']
+list_colsToEnty = ['key_people', 'key_region', 'key_organizations']
+list_entyType = ['person', 'region', 'company']
+
 
 list_hdrs = ['user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gecko/20100101 Firefox/104.0',
     'user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15',
@@ -72,8 +78,8 @@ list_hdrs = ['user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gec
 
 # ================================ email sender ================================
 
-def getSracpeEmailRprtText(var_runName):
-    var_text = f"""Run of table {list_ctgrKeys} in server failed"""
+def getSracpeEmailRprtText(var_runName, var_dt):
+    var_text = f"""Run of table {list_ctgrKeys} in server failed on {var_dt.strftime('%Y-%m-%d')}"""
     return var_text;
 
 
@@ -1057,5 +1063,7 @@ def getSummNews(list_url):
         print(var_url)
         print(var_keyPpl, '; ', var_keyRgn, '; ', var_keyOrg)
         print(var_summ, '\n\n')
+
+
 
 
