@@ -1,8 +1,6 @@
 from news_tools import *
 
 
-
-
 var_ctgrNewsDaydDelta = 10
 var_tgtAudience = var_tgtAudienceMaster
 var_nbrBulletPoints = 6
@@ -373,6 +371,8 @@ def runCtgrAndSummFunc(var_tblName, **argsGetSumm):
 # ======================== UPLOAD NEW SPLIT TEXT  TO article_entity ========================
 # ==========================================================================================
 def upldNewAliasFromSplitText(df_atclEnty_new):
+    var_outputStr = 'Uploading new alias from article split\n'
+
     df_alias = news_connectSQL.downloadSQLQuery('alias_table')
 
     df_atclEnty_new = df_atclEnty_new.merge( df_alias[['alias_name', 'entity_name', 'entity_id']] , on = 'alias_name', how = 'left')
@@ -384,19 +384,29 @@ def upldNewAliasFromSplitText(df_atclEnty_new):
             try:
                 print('uploading article_entity with available alias_name, uploading ', str(len(df_atclEnty_new_upld)), ' rows' )
                 news_connectSQL.uploadSQLQuery(df_atclEnty_new_upld, 'article_entity')
-                print('successfully uploaded all variables ', str(len(df_atclEnty_new_upld)), ' rows' )
+                var_str_1 = f"""successfully uploaded all variables found alias_name {str(len(df_atclEnty_new_upld))} rows"""
             except:
-                print('FAILED ON UPLOADING AVAILABLE alias_name ', '\n\n')
-
+                var_str_1 = 'FAILED ON UPLOADING AVAILABLE found alias_name'
+            print(var_str_1)
+            var_outputStr += var_str_1 +'\n'
+        else:
+            var_outputStr += ' no FOUND alias_name\n'
         # Upload alias_name NOT available
         df_atclEnty_new_new = df_atclEnty_new.loc[pd.isna( df_atclEnty_new.entity_name ) ][[ 'alias_name', 'entity_type' , 'news_url' ]]
         if df_atclEnty_new_new.empty == False:
             try:
                 print('uploading article_entity with available alias_name, uploading ', str(len(df_atclEnty_new_new)), ' rows' )
                 news_connectSQL.uploadSQLQuery(df_atclEnty_new_new, 'article_entity')
-                print('successfully uploaded all variables ', str(len(df_atclEnty_new_new)), ' rows' )
+
+                var_str_2 = f"""successfully uploaded all variables MISSING alias_name {str(len(df_atclEnty_new_new))} rows"""
             except:
-                print('FAILED ON UPLOADING AVAILABLE new alias_name ', '\n\n')  
+                var_str_2 = 'FAILED ON UPLOADING AVAILABLE MISSING alias_name'
+            print(var_str_2)
+            var_outputStr += var_str_2 +'\n'
+        else:
+            var_outputStr += ' no MISSING alias_name\n'
+
+    return var_outputStr;
 # ====================== UPLOAD NEW SPLIT TEXT  TO article_entity END ======================
 # ==========================================================================================
 
