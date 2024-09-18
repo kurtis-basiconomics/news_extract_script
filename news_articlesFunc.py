@@ -1,7 +1,7 @@
 from news_tools import *
 
 
-var_analysisVrsn = 1.1
+
 
 var_ctgrNewsDaydDelta = 10
 var_tgtAudience = var_tgtAudienceMaster
@@ -21,7 +21,6 @@ df_newsType = news_connectSQL.downloadSQLQuery('news_type_options')
 
 
 # ================================ UPLOAD TO article_entity ================================
-# insert df that will be uploaded to article_entity and replace na
 def upldToAtclEnty(df):
     var_i = 0
     var_iLen = len(df)
@@ -484,3 +483,4 @@ def runCtgrSplitText():
 
 # ================================ SPLIT NEWS TEXT FUNC END ================================
 # ==========================================================================================
+

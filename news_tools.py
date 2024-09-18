@@ -43,6 +43,11 @@ import news_connectSQL
 
 var_githubToken = news_connectSQL.var_githubToken
 
+# category and summary version
+var_analysisVrsn = 1.2 
+
+# openai model
+var_openaiApiModel = 'gpt-4o-mini'
 
 # key variables for news_summary and news_articles
 var_dtFrAnalysis = '2024-07-01'
@@ -437,7 +442,7 @@ def chatgpt_get_response_GPT4(list_message, **argsChatGptResponse):
         )
 
     chat_completion = client.chat.completions.create(
-            model="gpt-4o",
+            model=var_openaiApiModel,
             messages=list_message
         )
     return  chat_completion.choices[0].message.content
