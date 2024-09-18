@@ -1,6 +1,9 @@
 from news_tools import *
 
 
+client = ZenRowsClient(open(news_variables.path_zenrowssKeykcgmail, 'r').read().strip('\n'))
+
+
 var_tblName = 'news_fp'
 
 
@@ -118,8 +121,9 @@ if response.status_code == 200:
     except Exception as e:
         print('\n\n', var_tblName, 'export to csv with error:  ', e)
 
-    print('\n\n', getDataInfo(var_tblName, date_from = (datetime.today() - timedelta(days = 5)).strftime('%Y-%m-%d') ) )
+    print('\n\n', getDataInfo(var_tblName ) )
 
 
 else: 
     print('\n\n', var_tblName, ' headline extract failed!!')
+

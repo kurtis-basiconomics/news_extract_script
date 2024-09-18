@@ -16,6 +16,7 @@ var_baseUrl = 'https://www.cnbc.com/' # 2024/01/01'
 
 print('\n\n', var_tblName, 'downloading headlines')
 response = requests.get(var_baseUrl, headers=headers)
+# response = client.get(var_baseUrl)
 
 if response.status_code == 200:
     soup = BeautifulSoup(response.content, 'html.parser')
@@ -121,7 +122,7 @@ if response.status_code == 200:
     except Exception as e:
         print('\n\n', var_tblName, 'export to csv with error:  ', e)
 
-    print('\n\n', getDataInfo(var_tblName, date_from = (datetime.today() - timedelta(days = 5)).strftime('%Y-%m-%d') ) )
+    print('\n\n', getDataInfo(var_tblName) )
 
 
 else: 

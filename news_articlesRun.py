@@ -28,3 +28,4 @@ print(var_outputStr)
 
 print('\n\n start category split\n')
 news_articlesFunc.runCtgrSplitText()
+print('\n\n category split END')

@@ -19,6 +19,25 @@ df_newsCtgr = news_connectSQL.downloadSQLQuery('news_type_category')
 df_newsType = news_connectSQL.downloadSQLQuery('news_type_options')
 
 
+
+# ================================ UPLOAD TO article_entity ================================
+# insert df that will be uploaded to article_entity and replace na
+def upldToAtclEnty(df):
+    var_i = 0
+    var_iLen = len(df)
+    for var_aliasName, var_entyName, var_entyId in zip( df.alias_name, df.entity_name, df.entity_id):
+        var_i += 1
+        var_counterStr = str(var_i) + ' of ' + str(var_iLen) + ' '
+        var_outputStr = var_counterStr + var_aliasName + var_entyName
+        try:
+            var_outputStr += news_connectSQL.replaceSQLQuery('article_entity', 'alias_name', var_aliasName, ['entity_name', 'entity_id', 'updated_at'], [ var_entyName, var_entyId, datetime.now() ] , upload_to_sql = 'y' )
+        except:
+            var_outputStr += ' ERROR!! '
+        print(var_outputStr)
+# ============================== UPLOAD TO article_entity END ==============================
+# ==========================================================================================
+
+
 # ================================ RUN CATEGORY AND SUMMARY ================================
 
 # create the category intro including putting the keys and definitions into a dictionary
@@ -352,6 +371,38 @@ def runCtgrAndSummFunc(var_tblName, **argsGetSumm):
 
 
 
+# ======================== UPLOAD NEW SPLIT TEXT  TO article_entity ========================
+# ==========================================================================================
+def upldNewAliasFromSplitText(df_atclEnty_new):
+    df_alias = news_connectSQL.downloadSQLQuery('alias_table')
+
+    df_atclEnty_new = df_atclEnty_new.merge( df_alias[['alias_name', 'entity_name', 'entity_id']] , on = 'alias_name', how = 'left')
+
+    if df_atclEnty_new.empty == False:
+        # Upload alias_name already available
+        df_atclEnty_new_upld = df_atclEnty_new.dropna(subset = ['entity_name', 'entity_id'])
+        if df_atclEnty_new_upld.empty == False:
+            try:
+                print('uploading article_entity with available alias_name, uploading ', str(len(df_atclEnty_new_upld)), ' rows' )
+                news_connectSQL.uploadSQLQuery(df_atclEnty_new_upld, 'article_entity')
+                print('successfully uploaded all variables ', str(len(df_atclEnty_new_upld)), ' rows' )
+            except:
+                print('FAILED ON UPLOADING AVAILABLE alias_name ', '\n\n')
+
+        # Upload alias_name NOT available
+        df_atclEnty_new_new = df_atclEnty_new.loc[pd.isna( df_atclEnty_new.entity_name ) ][[ 'alias_name', 'entity_type' , 'news_url' ]]
+        if df_atclEnty_new_new.empty == False:
+            try:
+                print('uploading article_entity with available alias_name, uploading ', str(len(df_atclEnty_new_new)), ' rows' )
+                news_connectSQL.uploadSQLQuery(df_atclEnty_new_new, 'article_entity')
+                print('successfully uploaded all variables ', str(len(df_atclEnty_new_new)), ' rows' )
+            except:
+                print('FAILED ON UPLOADING AVAILABLE new alias_name ', '\n\n')  
+# ====================== UPLOAD NEW SPLIT TEXT  TO article_entity END ======================
+# ==========================================================================================
+
+
+
 # ================================== SPLIT NEWS TEXT FUNC ==================================
 
 def runCtgrSplitText():
@@ -427,6 +478,8 @@ def runCtgrSplitText():
         var_body += f""" with {str(var_iErr)} errors\n\n"""
         var_body += var_outputErr
         sendEmail(var_receiverEmail, var_title, var_body )
+
+    upldNewAliasFromSplitText(df_atclEnty_new)
     
 
 # ================================ SPLIT NEWS TEXT FUNC END ================================

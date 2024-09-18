@@ -79,7 +79,7 @@ list_hdrs = ['user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gec
 # ================================ email sender ================================
 
 def getSracpeEmailRprtText(var_runName, var_dt):
-    var_text = f"""Run of table {list_ctgrKeys} in server failed on {var_dt.strftime('%Y-%m-%d')}"""
+    var_text = f"""Run of table {var_runName} in server failed on {var_dt.strftime('%Y-%m-%d')}"""
     return var_text;
 
 

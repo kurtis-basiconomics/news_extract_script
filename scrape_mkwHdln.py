@@ -74,4 +74,4 @@ try:
 except Exception as e:
     print('\n\n', var_tblName, 'export to csv with error:  ', e)
 
-print('\n\n', getDataInfo(var_tblName, date_from = (datetime.today() - timedelta(days = 5)).strftime('%Y-%m-%d') ) )
+print('\n\n', getDataInfo(var_tblName) )
