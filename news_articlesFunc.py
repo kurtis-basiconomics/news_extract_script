@@ -480,15 +480,15 @@ def runCtgrSplitText():
 
         print(var_outputStr)
 
-    # send email of errors
-    var_title = f"""Run of Split Text Success with {str(var_i)} categories split on {datetime.now().strftime('%Y-%m-%d')}"""
-    var_body = var_title
+    # for email of errors
+    var_outputStrSumm = f"""Run of Split Text Success with {str(var_i)} categories split on {datetime.now().strftime('%Y-%m-%d')}"""
     if var_iErr > 0:
-        var_body += f""" with {str(var_iErr)} errors\n\n"""
-        var_body += var_outputErr
-        sendEmail(var_receiverEmail, var_title, var_body )
+        var_outputStrSumm += f""" with {str(var_iErr)} errors\n\n"""
+        var_outputStrSumm += var_outputErr
 
-    upldNewAliasFromSplitText(df_atclEnty_new)
+    var_outputStrSumm += upldNewAliasFromSplitText(df_atclEnty_new)
+
+    return var_outputStrSumm;
     
 
 # ================================ SPLIT NEWS TEXT FUNC END ================================
