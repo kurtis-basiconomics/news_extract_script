@@ -1,12 +1,16 @@
 from news_tools import *
 
 
+var_yy = 75 # number of urls to assign in articles to check and group, for article grouping in news_articlesSumm
+
 var_ctgrNewsDaydDelta = 10
 var_tgtAudience = var_tgtAudienceMaster
 var_nbrBulletPoints = 6
 var_newsCtgrToDictFormat = 3
 var_summCharacters = 750
 var_hdlnCharacters = 150
+
+var_daysInclAtclEnty = 3 # number of days from the headline_date where article is grouped
 
 
 argsGetSumm = {'upload_to_sql': '', 'create_new_ctgr': '', 'create_new_summ': '', 'number_of_category_articles': ''}
@@ -15,6 +19,13 @@ argsGetSumm = {'upload_to_sql': '', 'create_new_ctgr': '', 'create_new_summ': ''
 # prepare list of categories and news_type
 df_newsCtgr = news_connectSQL.downloadSQLQuery('news_type_category')
 df_newsType = news_connectSQL.downloadSQLQuery('news_type_options')
+
+
+# VARIABLES FOR KEY_SUBJECT -  to be uploaded to sql
+list_titlesToExclPpl = ['president', 'miniser', 'prime minister', 'baroness', 'sir', 'lord', 'senator', 'congressman', 'house of representative', 'baron', 'ceo', 'cheif executive officer', 'chief executive', 'cfo', 'chief of finance', 'finance chief', 'coo', 'chief operating officer', 'director', 'chairman', 'chairman of the board of directors', 'chairperson', 'parter', 'councilor', 'commissioner', 'ambassador', 'mayor', 'consul', 'secretary', 'judge ', 'justice miniter', 'justice']
+list_titlesToExclOrg = ['corp', 'corporation', 'limited', 'group', 'ltd', 'partners']
+list_titlesToExcl = list(set(list_titlesToExclOrg + list_titlesToExclPpl))
+list_exclRgn = ['multiple', 'global', 'international', 'world', 'worldwide']
 
 
 
@@ -369,7 +380,7 @@ def runCtgrAndSummFunc(var_tblName, **argsGetSumm):
 
 
 # ======================== UPLOAD NEW SPLIT TEXT  TO article_entity ========================
-# ==========================================================================================
+
 def upldNewAliasFromSplitText(df_atclEnty_new):
     var_outputStr = 'Uploading new alias from article split\n'
 
@@ -492,5 +503,232 @@ def runCtgrSplitText():
     
 
 # ================================ SPLIT NEWS TEXT FUNC END ================================
+# ==========================================================================================
+
+
+
+
+
+# ===================================== tag key_subject ====================================
+
+def removeTitlesFrStr(var_str):
+    for word in list_titlesToExcl:
+        var_str = var_str.replace(word, "")
+    var_str = var_str.strip()
+    return var_str;
+
+# Function to check for fuzzy matches
+def get_fuzzy_matches(names_list, var_title, threshold=80):
+    list_matches = []
+    for var_name in names_list:
+        if fuzz.partial_ratio(removeTitlesFrStr(var_name).lower(), var_title.lower()) >= threshold:
+            list_matches.append(var_name)
+    return list_matches
+
+def findNameInTitle(var_title, list_name):
+    list_frTitle = list()
+    if (var_title != '') and( pd.isna(var_title) == False) and (var_title is not None ):   
+        list_frTitle = [var_name for var_name in list_name if removeTitlesFrStr(var_name).lower() in var_title.lower()]
+        if len(list_frTitle) == 0:
+            list_frTitle = get_fuzzy_matches(list_name, var_title, threshold=80)
+    return list_frTitle;
+
+def getListOfAlias(var_url):
+    list_aliasName = list() 
+    try:
+        var_sqlText = f"""
+                select distinct alias_name
+                from basiconomics_news_schema.article_entity
+                where entity_id in (select distinct entity_id
+                        from basiconomics_news_schema.article_entity
+                        where news_url = '{var_url}') ;
+            """
+        list_aliasName = news_connectSQL.getRawSQLQuery(var_sqlText).alias_name.tolist()
+    except:
+        pass
+    return list_aliasName;
+
+def getListOfEntyId(list_keySbj):
+    list_entyId = list() 
+    try:
+        var_sqlText = f"""
+                select distinct entity_id
+                from basiconomics_news_schema.article_entity
+                where alias_name in {news_connectSQL.sqlPythonListToSql(list_keySbj)} ;
+            """
+        list_entyId = news_connectSQL.getRawSQLQuery(var_sqlText).entity_id.tolist()
+    except:
+        pass
+    return list_entyId;
+
+def getKeySubject(var_url):
+
+    df_newsSumm_var = news_connectSQL.downloadSQLQuery('news_summary', check_col = 'news_url', check_value = var_url)
+
+    list_entyId = list()
+    if len(df_newsSumm_var) > 0:
+        var_newsSrc, var_rcmdHdln = df_newsSumm_var.iloc[0][['news_source', 'recommended_headline' ]]
+        var_tblName = 'news_' + var_newsSrc
+
+        df_atclEnty_var = news_connectSQL.downloadSQLQuery('article_entity', check_col = 'news_url', check_value = var_url)
+
+        df_news_var = news_connectSQL.downloadSQLQuery(var_tblName, check_col = 'news_url', check_value = var_url)
+        var_title = df_news_var.iloc[0]['news_title']
+
+        list_name = getListOfAlias(var_url)
+
+        # Find which names are mentioned in the title
+        list_frTitle = findNameInTitle(var_title, list_name)
+        list_frRcmdHdln = findNameInTitle(var_rcmdHdln, list_name)
+
+        if (len(list_frTitle) > 0) and (len(list_frRcmdHdln) > 0):
+            list_keySbj = list(set(list_frTitle + list_frRcmdHdln))
+        elif (len(list_frTitle) > 0) and (len(list_frRcmdHdln) == 0):
+            list_keySbj = list_frTitle
+        elif (len(list_frTitle) == 0) and (len(list_frRcmdHdln) > 0):
+            list_keySbj = list_frRcmdHdln
+        else: 
+            list_keySbj = list()
+
+        if len(list_keySbj) > 0:
+            list_keySbj = set(list_keySbj) - set(list_exclRgn)
+            list_entyId = getListOfEntyId(list_keySbj)
+
+    return list_entyId;
+# =================================== tag key_subject END ==================================
+# ==========================================================================================
+
+
+# ==================================== article grouping ====================================
+
+def getUrlForAtcl(**argsAtclBuild):
+
+    var_dtldAnalysis = argsAtclBuild['detailed_analysis'] if 'detailed_analysis' in argsAtclBuild else 'n'
+    var_urlCnt = argsAtclBuild['url_count'] if 'url_count' in argsAtclBuild else 2
+    var_urlCnt = str(var_urlCnt)
+
+    var_dtldAnlsVal = 0
+    if (var_dtldAnalysis == 'y') or (var_dtldAnalysis == 'yes'):
+        var_dtldAnlsVal = 1
+
+    var_sqlTextFindNullAtcl = f"""
+            select distinct ae.news_url, ns.headline_date, ns.category, ns.news_type
+            from basiconomics_news_schema.article_entity ae
+            left join basiconomics_news_schema.news_summary ns on ns.news_url = ae.news_url
+            where ae.article_id is null
+            and ns.category in ( select category from basiconomics_news_schema.news_type_category where detailed_analysis = {var_dtldAnlsVal} )
+            group by 1, 2, 3, 4
+            order by ns.headline_date desc
+            limit {var_urlCnt};
+        """
+    df_urlToAnalyse = news_connectSQL.getRawSQLQuery( var_sqlTextFindNullAtcl )    
+    
+    return df_urlToAnalyse;
+
+
+def getSmlrAtclInfo(var_newsType, var_hdlnDt, list_entyNameRgn, **argsAtclBuild):
+
+    # 0 for getting days before headline date, 1 for days after the headline. 1 is for checking available article_id for th for similar news
+    var_dtType = argsAtclBuild['after_headline_date'] if 'after_headline_date' in argsAtclBuild else 'y'
+    # 0 for not detailed, 1 for detailed and match key_subject
+    var_dtldAnalysis = argsAtclBuild['detailed_analysis'] if 'detailed_analysis' in argsAtclBuild else 'y'
+
+
+    if (var_dtType == 'y') or (var_dtType == 'yes'):
+        var_dt_1 = (var_hdlnDt).strftime('%Y-%m-%d')
+        var_dt_2 = (var_hdlnDt + timedelta(days=var_daysInclAtclEnty)).strftime('%Y-%m-%d')
+        var_valRtn = 'article_id'
+        var_atclFltr = 'NOT NULL'
+    else:
+        var_dt_1 = (var_hdlnDt - timedelta(days=var_daysInclAtclEnty)).strftime('%Y-%m-%d')
+        var_dt_2 = (var_hdlnDt).strftime('%Y-%m-%d')
+        var_valRtn = 'news_url'
+        var_atclFltr = 'NULL' 
+
+
+    # filter for detailed analysis to only include key_subject
+    if (var_dtldAnalysis == 'y') or (var_dtldAnalysis == 'yes'):
+        list_keySbjId = argsAtclBuild['key_subject_list']
+        
+        var_entyIdFltr = f"""
+                AND ae.news_url in (select ae.news_url
+                    from basiconomics_news_schema.article_entity ae
+                    LEFT JOIN basiconomics_news_schema.news_summary ns ON ns.news_url = ae.news_url      
+                    where ns.news_type = '{var_newsType}'
+                        AND ns.headline_date >= '{var_dt_1}'
+                        AND ns.headline_date <= '{var_dt_2}'
+                        and ae.key_subject = 1  
+                        and ae.entity_id in { news_connectSQL.sqlPythonListToSql(list_keySbjId, use_quotes = 'n') } )
+            """
+    else:
+        var_entyIdFltr = ''
+
+
+    var_sqlText = f"""
+            SELECT ae.news_url, ae.article_id
+            FROM basiconomics_news_schema.article_entity ae
+            LEFT JOIN basiconomics_news_schema.news_summary ns ON ns.news_url = ae.news_url
+            WHERE
+                ns.news_type = '{var_newsType}'
+                AND ae.entity_type = 'region'
+                AND ae.entity_name IN { news_connectSQL.sqlPythonListToSql(list_entyNameRgn) }
+                AND ns.headline_date >= '{var_dt_1}'
+                AND ns.headline_date <= '{var_dt_2}'
+                AND ae.article_id IS {var_atclFltr}
+                {var_entyIdFltr}
+            GROUP BY ae.news_url, ae.article_id
+            HAVING COUNT(DISTINCT ae.entity_name) = {str(len(list_entyNameRgn))}
+                AND COUNT(DISTINCT ae.entity_name) = 
+                    (SELECT COUNT(DISTINCT ae2.entity_name)
+                    FROM basiconomics_news_schema.article_entity ae2
+                    WHERE ae2.news_url = ae.news_url
+                    AND ae2.entity_type = 'region');
+        """
+
+    df_var = news_connectSQL.getRawSQLQuery( var_sqlText )
+    list_var = df_var[var_valRtn].tolist()
+    
+    return list_var;
+
+
+def upldAtclIdPipeline(var_atclId, **argsAtclBuild):
+    var_addtnInfo = argsAtclBuild['additional_info'] if 'additional_info' in argsAtclBuild else 'new'
+
+    if not isinstance( var_atclId, list):
+        list_atclId = [var_atclId]
+    else:
+        list_atclId = var_atclId
+    
+    # try:
+    df_var = pd.DataFrame( list_atclId, columns = ['article_id'])
+    df_var[['article_status', 'additional_info', 'updated_at']] = 0, var_addtnInfo, datetime.now()
+    
+    news_connectSQL.uploadSQLQuery(df_var , 'article_pipeline')
+    var_outputStr = str(list_atclId) + ' article_id uploaded to article_pipeline'
+    # except:
+    #     var_outputStr = str(list_atclId) + ' article_id uploaded to article_pipeline FAILED'
+    return var_outputStr;
+
+
+
+def getAtclIdListFromUrl(list_urlDwld):
+
+    var_listForSql = news_connectSQL.sqlPythonListToSql(list_urlDwld)
+    var_sqlTextGetAtclIdChg = f"""
+            select distinct ae.article_id
+            from basiconomics_news_schema.article_entity ae
+            where ae.article_id is not null 
+            and ae.news_url in {var_listForSql}
+        """
+
+    df_atclId = news_connectSQL.getRawSQLQuery( var_sqlTextGetAtclIdChg )
+    list_atclId = list()
+    if df_atclId.empty == False:
+        df_atclId['article_id'] = df_atclId['article_id'].astype(float)
+        list_atclId = df_atclId['article_id'].tolist()
+
+    return list_atclId;
+
+# ================================== article grouping END ==================================
 # ==========================================================================================
 

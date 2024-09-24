@@ -32,6 +32,6 @@ var_outputStr += var_outputStrCtgrSplit
 var_outputStr += f"""\n****** split text analysis END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n"""
 print('\n\n category split END')
 
-var_title = f"""Report on Article Summarry on {datetime.now().strftime('%Y-%m-%d')}"""
+var_title = f"""Report on Category Summary on {datetime.now().strftime('%Y-%m-%d')}"""
 sendEmail(var_receiverEmail, var_title, var_outputStr )
 print(var_outputStr)

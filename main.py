@@ -18,11 +18,11 @@ def main():
         sendEmail(var_receiverEmail, var_text, var_text )
 
     try:
-        import scrape_mkwHdln
+        import scrape_mkw
         print('scrape Marketwatch complete')
     except Exception as e:
         print('Marketwatch scrape with error:  ', e)
-        var_text = getSracpeEmailRprtText('scrape_mkwHdln', datetime.now())
+        var_text = getSracpeEmailRprtText('scrape_mkw', datetime.now())
         sendEmail(var_receiverEmail, var_text, var_text )
         
     try:
