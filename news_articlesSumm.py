@@ -37,10 +37,9 @@ try:
         try:
             list_entyId = news_articlesFunc.getKeySubject(var_url)
             if len(list_entyId)> 0:
-                for var_atclId in list_entyId:
-                    var_str_1_a = news_connectSQL.replaceSQLQuery('article_entity', ['news_url', 'entity_id'], [var_url, var_atclId], ['key_subject', 'updated_at'] , [1, datetime.now()], upload_to_sql = 'y')
-                    var_str_1_a = var_str_1 + var_str_1_a
-                    print(var_str_1_a)
+                var_str_1_a = news_connectSQL.replaceSQLQuery('article_entity', ['news_url', 'entity_id'], [var_url, list_entyId], ['updated_at', 'key_subject'], [datetime.now(), 1], use_quotes = 'n', upload_to_sql = 'y')
+                var_str_1_a = var_str_1 + var_str_1_a
+                print(var_str_1_a)
                 var_iKeySbjtFound += 1
             else:
                 var_str_1 += ' no aticle_id for key subject!! '

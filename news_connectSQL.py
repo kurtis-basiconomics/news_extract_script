@@ -278,7 +278,10 @@ def checkNewsUrlInTbl(var_tblName, var_url):
 
 
 
-def getSQLReplaceQuery(var_tblName, var_colChk, var_chkVal, var_colChg, var_chgVal):
+def getSQLReplaceQuery(var_tblName, var_colChk, var_chkVal, var_colChg, var_chgVal, **argsGetSQL):
+    
+    var_useQts = argsGetSQL['use_quotes'] if 'use_quotes' in argsGetSQL else 'y'
+
     # Ensure var_colChg and var_chgVal are lists
     if not isinstance(var_colChg, list):
         var_colChg = [var_colChg]
@@ -295,19 +298,33 @@ def getSQLReplaceQuery(var_tblName, var_colChk, var_chkVal, var_colChg, var_chgV
     set_clause = ", ".join([f"{col} = %s" for col in var_colChg])
     
     # Construct the WHERE part of the SQL statement dynamically
-    where_clause = " AND ".join([f"{col} = %s" for col in var_colChk])
+    where_conditions = []
+    params = []
+
+    # Iterate over the check columns and their corresponding values
+    for col, val in zip(var_colChk, var_chkVal):
+        if isinstance(val, list):  # If the check value is a list, use the IN clause
+            # Use the sqlPythonListToSql function to generate the correct IN clause
+            in_clause = sqlPythonListToSql(val, use_quotes = var_useQts)
+            where_conditions.append(f"{col} IN {in_clause}")
+        else:  # Otherwise, just use a normal equality check
+            where_conditions.append(f"{col} = %s")
+            params.append(val)  # Add the single value to params
+
+    # Join all the WHERE conditions with AND
+    where_clause = " AND ".join(where_conditions)
 
     # Build the complete SQL query
     query = f"""
-    UPDATE {var_tblName}
-    SET {set_clause}
-    WHERE {where_clause};
-    """
+            UPDATE {var_tblName}
+            SET {set_clause}
+            WHERE {where_clause};
+        """
     
-    # Create a tuple for the query parameters
-    params = tuple(var_chgVal + var_chkVal)
-    
-    return query, params;
+    # Add the values for the SET clause to the params tuple
+    params = tuple(var_chgVal + params)
+
+    return query, params
 
 
 
@@ -315,12 +332,13 @@ def replaceSQLQuery(var_tblName, var_colChk, var_chkVal, var_colChg, var_chgVal,
 
     var_outputStr = ''
     var_uploadOk = argsGetSQL['upload_to_sql'] if 'upload_to_sql' in argsGetSQL else 'y'
+    var_useQts = argsGetSQL['use_quotes'] if 'use_quotes' in argsGetSQL else 'y'
 
     # Connect to the SQL database
     engine = create_engine(database_url)
 
     # Construct the update query with parameters
-    update_query, params = getSQLReplaceQuery(var_tblName, var_colChk, var_chkVal, var_colChg, var_chgVal)
+    update_query, params = getSQLReplaceQuery(var_tblName, var_colChk, var_chkVal, var_colChg, var_chgVal, use_quotes = var_useQts)
     var_outputStr = 'in table ' + var_tblName + ', if value in column ' + str(var_colChk) + ' is ' + str(var_chkVal)[ : 100] + ' , then replace in column ' + str(var_colChg) + ' with value ' + str(var_chgVal)[ : 100]
 
     if (var_uploadOk == 'y') or (var_uploadOk == 'yes'):
