@@ -12,53 +12,59 @@ var_outputStr += f"""****** article summary and analysis start on {datetime.now(
 
 # =========================== get key_subject ===========================
 var_outputStr += f"""****** key_subject start on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n"""
-df_newsSumm = news_connectSQL.downloadSQLQuery('news_summary', date_col = 'created_at', date_from = var_dtFrAnalysis)
-df_atclEnty = news_connectSQL.downloadSQLQuery('article_entity')
+try:
+    df_newsSumm = news_connectSQL.downloadSQLQuery('news_summary', date_col = 'created_at', date_from = var_dtFrAnalysis)
+    df_atclEnty = news_connectSQL.downloadSQLQuery('article_entity')
 
-list_urlDwld = df_atclEnty.loc[pd.isna(df_atclEnty.key_subject)].news_url.unique()
+    list_urlDwld = df_atclEnty.loc[pd.isna(df_atclEnty.key_subject)].news_url.unique()
 
-var_len = len(list_urlDwld)
-var_i = 0
-var_iKeySbjtFound = 0
-var_iKeySbjtMiss = 0
-var_iKeySbjtErr = 0
+    var_len = len(list_urlDwld)
+    var_i = 0
+    var_iKeySbjtFound = 0
+    var_iKeySbjtMiss = 0
+    var_iKeySbjtErr = 0
 
-print(str(len(list_urlDwld)), ' articles to to assign key_subject' )
+    print(str(len(list_urlDwld)), ' articles to to assign key_subject' )
 
-for var_url in list_urlDwld:
-    var_i += 1
-    var_counterStr = f"""{str(var_i)} of {str(var_len)} """
+    for var_url in list_urlDwld:
+        var_i += 1
+        var_counterStr = f"""{str(var_i)} of {str(var_len)} """
 
-    var_str_1 = var_counterStr + ' ' + var_url + ' '
+        var_str_1 = var_counterStr + ' ' + var_url + ' '
 
-    news_connectSQL.replaceSQLQuery('article_entity', ['news_url'], [var_url], ['key_subject', 'updated_at'] , [0, datetime.now()], upload_to_sql = 'y')
+        news_connectSQL.replaceSQLQuery('article_entity', ['news_url'], [var_url], ['key_subject', 'updated_at'] , [0, datetime.now()], upload_to_sql = 'y')
 
-    try:
-        list_entyId = news_articlesFunc.getKeySubject(var_url)
-        if len(list_entyId)> 0:
-            for var_atclId in list_entyId:
-                var_str_1_a = news_connectSQL.replaceSQLQuery('article_entity', ['news_url', 'entity_id'], [var_url, var_atclId], ['key_subject', 'updated_at'] , [1, datetime.now()], upload_to_sql = 'y')
-                var_str_1_a = var_str_1 + var_str_1_a
-                print(var_str_1_a)
+        try:
+            list_entyId = news_articlesFunc.getKeySubject(var_url)
+            if len(list_entyId)> 0:
+                for var_atclId in list_entyId:
+                    var_str_1_a = news_connectSQL.replaceSQLQuery('article_entity', ['news_url', 'entity_id'], [var_url, var_atclId], ['key_subject', 'updated_at'] , [1, datetime.now()], upload_to_sql = 'y')
+                    var_str_1_a = var_str_1 + var_str_1_a
+                    print(var_str_1_a)
                 var_iKeySbjtFound += 1
-        else:
-            var_str_1 += ' no aticle_id for key subject!! '
-            var_iKeySbjtMiss += 1
-            print(var_str_1)            
+            else:
+                var_str_1 += ' no aticle_id for key subject!! '
+                var_iKeySbjtMiss += 1
+                print(var_str_1)            
 
-    except:
-        var_str_1 += ' with ERROR!! '
-        var_iKeySbjtErr += 1
-        print('\n', var_str_1, '\n\n')
+        except:
+            var_str_1 += ' with ERROR!! '
+            var_iKeySbjtErr += 1
+            print('\n', var_str_1, '\n\n')
 
 
-var_outputStr += f"""articles with key_subject assigned: {str(var_iKeySbjtFound)}\narticles with NO key_subject {str(var_iKeySbjtMiss)}\narticles with key_subject ERROR {str(var_iKeySbjtErr)}\n"""
+    var_outputStr += f"""articles with key_subject assigned: {str(var_iKeySbjtFound)}\narticles with NO key_subject {str(var_iKeySbjtMiss)}\narticles with key_subject ERROR {str(var_iKeySbjtErr)}\n"""
+except:
+    var_outputStr += 'FAILED\n'
 var_outputStr += f"""\n****** key_subject END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n"""
 
 # ========================= get key_subject END =========================
 # =======================================================================
 
-
+# to delete checkpoint
+var_title = f"""Report on Article Summary on {datetime.now().strftime('%Y-%m-%d')} checkpoint"""
+sendEmail(var_receiverEmail, var_title, var_outputStr )
+print(var_outputStr)
 
 
 # ========================== article groupping ==========================
