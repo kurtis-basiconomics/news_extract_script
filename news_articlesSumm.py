@@ -16,7 +16,8 @@ try:
     df_newsSumm = news_connectSQL.downloadSQLQuery('news_summary', date_col = 'created_at', date_from = var_dtFrAnalysis)
     df_atclEnty = news_connectSQL.downloadSQLQuery('article_entity')
 
-    list_urlDwld = df_atclEnty.loc[pd.isna(df_atclEnty.key_subject)].news_url.unique()
+    # list_urlDwld = df_atclEnty.loc[pd.isna(df_atclEnty.key_subject)].news_url.unique()
+    list_urlDwld = df_atclEnty.sort_index(ascending = False).loc[pd.isna(df_atclEnty.key_subject)].news_url.unique()
 
     var_len = len(list_urlDwld)
     var_i = 0
@@ -50,6 +51,13 @@ try:
             var_str_1 += ' with ERROR!! '
             var_iKeySbjtErr += 1
             print('\n', var_str_1, '\n\n')
+
+        # checkpoint
+        if str(var_i)[-3: ] == '000':
+            # to delete checkpoint
+            var_title_1 = f"""Report on Article Summary on {datetime.now().strftime('%Y-%m-%d')} with {str(var_i)} urls proccessed checkpoint"""
+            var_outputStr_1 = var_outputStr + f"""articles with key_subject assigned: {str(var_iKeySbjtFound)}\narticles with NO key_subject {str(var_iKeySbjtMiss)}\narticles with key_subject ERROR {str(var_iKeySbjtErr)}\n"""
+            sendEmail(var_receiverEmail, var_title_1, var_outputStr_1 )
 
 
     var_outputStr += f"""articles with key_subject assigned: {str(var_iKeySbjtFound)}\narticles with NO key_subject {str(var_iKeySbjtMiss)}\narticles with key_subject ERROR {str(var_iKeySbjtErr)}\n"""
