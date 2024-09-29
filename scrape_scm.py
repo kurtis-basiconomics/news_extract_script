@@ -29,6 +29,8 @@ if response.status_code == 200:
                 var_url = var_element['href']
                 if var_baseUrl not in var_url: var_url = var_baseUrl[ : -1] + var_url
 
+                var_url = var_url.split('?')[0]
+
                 df_var = pd.DataFrame([[var_url, var_title ]], columns = df_hdlnNew.columns)
                 
                 if (var_url not in df_hdlnNew.news_url.unique()) and ('/video/' not in var_url):
@@ -61,6 +63,8 @@ for var_url_1 in [var_baseUrl_1, var_baseUrl_2]:
                 var_title = var_element.text
                 var_url = var_element.find('a')['href']
                 if var_baseUrl not in var_url: var_url = var_baseUrl[ : -1] + var_url
+
+                var_url = var_url.split('?')[0]
 
                 df_var = pd.DataFrame([[var_url, var_title ]], columns = df_hdlnNew.columns)
 
