@@ -511,11 +511,28 @@ def runCtgrSplitText():
 
 # ===================================== tag key_subject ====================================
 
+# get list of URL without key_subject
+def getListUrlNoKeySubject():
+    list_url = list() 
+    try:
+        var_sqlText = f"""
+                select distinct news_url 
+                from basiconomics_news_schema.article_entity 
+                where key_subject is null
+                group by 1;
+            """
+        list_url = news_connectSQL.getRawSQLQuery(var_sqlText).news_url.tolist()
+    except:
+        pass
+    return list_url;
+
+
 def removeTitlesFrStr(var_str):
     for word in list_titlesToExcl:
         var_str = var_str.replace(word, "")
     var_str = var_str.strip()
     return var_str;
+
 
 # Function to check for fuzzy matches
 def get_fuzzy_matches(names_list, var_title, threshold=80):
@@ -525,6 +542,7 @@ def get_fuzzy_matches(names_list, var_title, threshold=80):
             list_matches.append(var_name)
     return list_matches
 
+
 def findNameInTitle(var_title, list_name):
     list_frTitle = list()
     if (var_title != '') and( pd.isna(var_title) == False) and (var_title is not None ):   
@@ -532,6 +550,7 @@ def findNameInTitle(var_title, list_name):
         if len(list_frTitle) == 0:
             list_frTitle = get_fuzzy_matches(list_name, var_title, threshold=80)
     return list_frTitle;
+
 
 def getListOfAlias(var_url):
     list_aliasName = list() 

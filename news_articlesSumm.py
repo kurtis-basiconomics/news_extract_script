@@ -13,11 +13,7 @@ var_outputStr += f"""****** article summary and analysis start on {datetime.now(
 # =========================== get key_subject ===========================
 var_outputStr += f"""****** key_subject start on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n"""
 try:
-    df_newsSumm = news_connectSQL.downloadSQLQuery('news_summary', date_col = 'created_at', date_from = var_dtFrAnalysis)
-    df_atclEnty = news_connectSQL.downloadSQLQuery('article_entity')
-
-    # list_urlDwld = df_atclEnty.loc[pd.isna(df_atclEnty.key_subject)].news_url.unique()
-    list_urlDwld = df_atclEnty.sort_index(ascending = False).loc[pd.isna(df_atclEnty.key_subject)].news_url.unique()
+    list_urlDwld = news_articlesFunc.getListUrlNoKeySubject()
 
     var_len = len(list_urlDwld)
     var_i = 0
