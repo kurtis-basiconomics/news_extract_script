@@ -13,7 +13,9 @@ var_hdlnCharacters = 150
 var_daysInclAtclEnty = 3 # number of days from the headline_date where article is grouped
 
 
-argsGetSumm = {'upload_to_sql': '', 'create_new_ctgr': '', 'create_new_summ': '', 'number_of_category_articles': ''}
+list_atclCols = ['article_id', 'recommended_headline', 'summary', 'news_source', 'news_type', 'key_people', 'region', 'news_url', 'headline_date', 'source_count', 'created_at', 'updated_at', 'analysis_version', 'article_type', 'additional_info']
+
+argsGetSumm = {'upload_to_sql': '', 'create_new_ctgr': '', 'create_new_summ': '', 'number_of_category_articles': '', 'print_progress': ''}
 
 
 # prepare list of categories and news_type
@@ -749,5 +751,194 @@ def getAtclIdListFromUrl(list_urlDwld):
     return list_atclId;
 
 # ================================== article grouping END ==================================
+# ==========================================================================================
+
+
+
+
+# =================================== CREATE ARTICLE SUMM ==================================
+
+def getSummConsolidationTextForArticle(list_urlAtclSumm):
+
+    listAtcl_keyRgn = list()
+    listAtcl_keyPpl = list()
+    listAtcl_keyOrg = list()
+
+    var_sqlText = f"""
+            select ns.news_url, ns.news_type, ns.recommended_headline, ns.summary, ns.news_source
+            from basiconomics_news_schema.news_summary ns
+            where ns.news_url in (select distinct ae.news_url 
+                from basiconomics_news_schema.article_entity ae
+                where news_url in { news_connectSQL.sqlPythonListToSql(list_urlAtclSumm) })
+        """
+    df_newsSumm_var = news_connectSQL.getRawSQLQuery(var_sqlText)
+
+    var_sqlText = f"""
+            select ae.*
+            from basiconomics_news_schema.article_entity ae
+            where ae.news_url in (select distinct ae.news_url 
+                from basiconomics_news_schema.article_entity ae
+                where news_url in { news_connectSQL.sqlPythonListToSql(list_urlAtclSumm) } )
+        """
+    df_atclEnty_var = news_connectSQL.getRawSQLQuery(var_sqlText)
+
+    var_textConsolidated = ''
+    for var_urlSumm in list_urlAtclSumm:
+
+        var_rcmdHdln, var_summ = df_newsSumm_var.loc[df_newsSumm_var.news_url == var_urlSumm].iloc[0][['recommended_headline', 'summary']]
+
+        list_keyPpl = df_atclEnty_var.loc[(~pd.isna(df_atclEnty_var.entity_name)) & (df_atclEnty_var.news_url == var_urlSumm) & (df_atclEnty_var.entity_type == 'person')].entity_name.unique()
+        list_keyOrg = df_atclEnty_var.loc[(~pd.isna(df_atclEnty_var.entity_name)) & (df_atclEnty_var.news_url == var_urlSumm) & (df_atclEnty_var.entity_type == 'company')].entity_name.unique()
+        list_keyRgn = df_atclEnty_var.loc[(~pd.isna(df_atclEnty_var.entity_name)) & (df_atclEnty_var.news_url == var_urlSumm) & (df_atclEnty_var.entity_type == 'region')].entity_name.unique()
+        list_keySrc = df_newsSumm_var.news_source.unique()
+
+        var_textConsolidated += f"""the headline {var_rcmdHdln} with a summary {var_summ}, """
+        if len(list_keyRgn) > 0:
+            var_textConsolidated += f"""the key regions are { ', '.join(list_keyRgn) }, """
+            listAtcl_keyRgn.extend( list( set(list_keyRgn) - set(listAtcl_keyRgn)) )
+        if len(list_keyPpl) > 0:
+            var_textConsolidated += f"""the key indivuals are { ', '.join(list_keyPpl) }, """
+            listAtcl_keyPpl.extend( list( set(list_keyPpl) - set(listAtcl_keyPpl)) )
+        if len(list_keyOrg) > 0:
+            var_textConsolidated += f"""the key organizations are { ', '.join(list_keyOrg) }, """
+            listAtcl_keyOrg.extend( list( set(list_keyOrg) - set(listAtcl_keyOrg)) )
+
+        var_textConsolidated += '; '
+
+    list_newsType = df_newsSumm_var.news_type.unique()
+
+    return var_textConsolidated, listAtcl_keyRgn, listAtcl_keyPpl, listAtcl_keyOrg, list_newsType, list_keySrc;
+
+
+
+
+argSmlrAtcl = {'current_summary': '', 'current_headline': '', 'current_key_region': '', 'current_key_people': '', 'current_key_organizations': ''}
+def getSummOfSmlrAtcl(list_urlAtclSumm, **argSmlrAtcl):
+
+    var_textConsolidated, list_keyRgn, list_keyPpl, list_keyOrg, list_newsType, list_keySrc = getSummConsolidationTextForArticle(list_urlAtclSumm)    
+
+    var_initialMsg = f"""I will help in create a summary of financial news from a list of summaries from news articles about {', '.join(list_newsType).replace('_', ' ')[ : -1]}. """
+    if 'current_summary' in argSmlrAtcl:
+        var_initialMsg += f""" I will adjust the current summary based on new information you will share. """
+        if 'current_key_region' in argSmlrAtcl:
+            var_initialMsg += f"""the subject of the current summary is occuring in {', '.join( argSmlrAtcl['current_key_region'] )}. """
+            listAtcl_keyRgn = argSmlrAtcl['current_key_region']  
+        if 'current_key_people' in argSmlrAtcl:
+            var_initialMsg += f"""the main individuals subject of the current summary are {', '.join( argSmlrAtcl['current_key_people'] )}. """
+            listAtcl_keyPpl = argSmlrAtcl['current_key_people']            
+        if 'current_key_organizations' in argSmlrAtcl:
+            var_initialMsg += f"""the main companies subject of the current summary are {', '.join( argSmlrAtcl['current_key_organizations'] )}. """
+            listAtcl_keyOrg = argSmlrAtcl['current_key_organizations']            
+        var_initialMsg +=  f"""the current headline for the summary is {argSmlrAtcl['current_headline']}, current summary is {argSmlrAtcl['current_summary']} """
+    else:
+        listAtcl_keyRgn = list()
+        listAtcl_keyPpl = list()
+        listAtcl_keyOrg = list()
+
+    listAtcl_keyRgn.extend( list( set(list_keyRgn) - set(listAtcl_keyRgn)) )
+    listAtcl_keyPpl.extend( list( set(list_keyPpl) - set(listAtcl_keyPpl)) )
+    listAtcl_keyOrg.extend( list( set(list_keyOrg) - set(listAtcl_keyOrg)) )
+
+    var_asst_2 = f"""share the table of news articles and their key information and I can consolidate the summaries and return a maximum of {var_nbrBulletPoints} bullet points, with a maximum of {var_summCharacters} characters.  """ 
+    var_user_2 = """the output will be in this format. ['some summary information here', 'more summary text here', 'more summary text here']. do not include other text not related to the output""" # format of the output
+    var_user_3 = f"""from news articles information shared, create a summary with {var_nbrBulletPoints} bullet points, and a maximum of {var_summCharacters} characters.  """
+
+    # then ask for recommended headline
+
+    list_cvrnHstr = [
+            {"role": "system", "content": var_initialMsg },
+            {"role": "assistant", "content": var_asst_2 },
+            {"role": "user", "content": var_textConsolidated },
+            {"role": "user", "content": var_user_2},
+            {"role": "user", "content": var_user_3}
+        ]
+
+    var_newsSummList = chatgpt_get_response_GPT4(list_cvrnHstr, api_key = open(news_variables.path_openaiKey_news_articleId, 'r').read().strip('\n') )
+
+    var_asst_3 = f"""here is the summary for the articles: {str(var_newsSummList)}"""
+    var_user_4 = f"""based on the information I provided and the summary you provided, give me a good headline for the summary targeting {var_tgtAudience} and limit to {var_hdlnCharacters} characters. just return the text for the headline"""
+
+    list_cvrnHstr.append( {"role": "assistant", "content": var_asst_3} )
+    list_cvrnHstr.append( {"role": "user", "content": var_user_4} )
+
+    var_rcmdHdln = chatgpt_get_response_GPT4(list_cvrnHstr, api_key = open(news_variables.path_openaiKey_news_articleId, 'r').read().strip('\n') )
+
+    # print(list_cvrnHstr)
+
+    return var_newsSummList, var_rcmdHdln, listAtcl_keyRgn, listAtcl_keyPpl, listAtcl_keyOrg, list_newsType, list_keySrc;
+
+
+
+def getMaxHdlnDt(list_urlAtclSumm):
+    var_sqlText = f"""
+            select max(headline_date)
+            from basiconomics_news_schema.news_summary ns
+            where ns.news_url in (select distinct ae.news_url 
+                from basiconomics_news_schema.article_entity ae
+                where news_url in { news_connectSQL.sqlPythonListToSql(list_urlAtclSumm) }  )
+        """
+    var_hdlnDt = news_connectSQL.getRawSQLQuery(var_sqlText).values[0]
+
+    return var_hdlnDt;
+
+
+
+
+
+def createAtclSumm(var_atclId):
+    try:
+        list_urlAtclSumm = news_connectSQL.downloadSQLQuery('article_entity', check_col = 'article_id', check_value = var_atclId)['news_url'].unique()
+        # print(list_urlAtclSumm)
+        if len(list_urlAtclSumm) > 0:
+            if len(list_urlAtclSumm) > 1:
+                # print(str(len(list_urlAtclSumm)), 'use gpt to merge articles')
+                var_summ, var_rcmdHdln, list_keyRgn, list_keyPpl, list_keyOrg, list_newsType, list_newsSrc = getSummOfSmlrAtcl(list_urlAtclSumm)
+
+            elif len(list_urlAtclSumm) == 1:
+                # print(list_urlAtclSumm, 'NO gpt to merge articles')
+                var_url = list_urlAtclSumm[0]
+                df_newsSumm_var = news_connectSQL.downloadSQLQuery('news_summary', check_col = 'news_url', check_value = var_url)
+                df_atclEnty_var = news_connectSQL.downloadSQLQuery('article_entity', check_col = 'news_url', check_value = var_url)
+
+                var_rcmdHdln, var_summ = df_newsSumm_var.iloc[0][['recommended_headline', 'summary']]
+
+                list_keyPpl = df_atclEnty_var.loc[(~pd.isna(df_atclEnty_var.entity_name)) & (df_atclEnty_var.entity_type == 'person')].entity_name.unique()
+                list_keyOrg = df_atclEnty_var.loc[(~pd.isna(df_atclEnty_var.entity_name)) & (df_atclEnty_var.entity_type == 'company')].entity_name.unique()
+                list_keyRgn = df_atclEnty_var.loc[(~pd.isna(df_atclEnty_var.entity_name)) & (df_atclEnty_var.entity_type == 'region')].entity_name.unique()
+                list_newsType = df_newsSumm_var.news_type.unique()
+                list_newsSrc = df_newsSumm_var.news_source.unique()    
+
+            var_hdlnDt = getMaxHdlnDt(list_urlAtclSumm)
+            var_summ = cleanArticleSumm(var_summ)
+
+            list_valUpld = [var_atclId, 'article_summ', 1, var_rcmdHdln, var_summ, list_newsType[0], len(list_newsSrc), datetime.now(), pd.to_datetime(var_hdlnDt).date[0] ]
+            list_colUpld = ['article_id', 'article_type', 'analysis_version', 'recommended_headline', 'summary', 'news_type', 'source_count', 'created_at', 'headline_date' ]
+
+            for var_yy, var_col in zip([list_newsSrc, list_keyPpl, list_keyRgn, list_keyOrg, list_urlAtclSumm] , ['news_source', 'key_people', 'region', 'key_organizations', 'news_url']):
+                if len(var_yy) > 0 :
+                    var_yy = ', '.join(var_yy)
+
+                    list_valUpld.append(var_yy)
+                    list_colUpld.append(var_col)
+
+            df_var = pd.DataFrame([list_valUpld], columns = list_colUpld)
+
+            news_connectSQL.uploadSQLQuery(df_var, 'news_articles')
+
+            var_outputStr = f"""article {str(var_atclId)} with headline {str(var_rcmdHdln)[ : 50]} successfully uploaded """
+
+            news_connectSQL.replaceSQLQuery('article_pipeline', ['article_id', 'article_status'], [var_atclId, 0], ['article_status', 'updated_at'], [ 1, datetime.now()], upload_to_sql = 'y') 
+
+        else:
+            var_outputStr = f"""article {str(var_atclId)} no URLs, closing article_id"""
+            news_connectSQL.replaceSQLQuery('article_pipeline', ['article_id', 'article_status'], [var_atclId, 0], ['article_status', 'updated_at'], [ 2, datetime.now()], upload_to_sql = 'y') 
+
+    except:
+        var_outputStr = f"""article {str(var_atclId)} upload FAILED"""
+
+    return var_outputStr;
+
+
+# ================================= CREATE ARTICLE SUMM END ================================
 # ==========================================================================================
 

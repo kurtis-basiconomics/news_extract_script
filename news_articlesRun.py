@@ -35,7 +35,7 @@ var_outputStr += f"""\n****** split text analysis END on {datetime.now().strftim
 print('\n\n category split END')
 
 # send checkpoint email
-var_titleEmail_1 = 'checkpoint 1' + var_titleEmail
+var_titleEmail_1 = 'checkpoint 1  ' + var_titleEmail
 var_outputStr_1 = '************************** checkpoint update **************************\n' + var_outputStr
 sendEmail(var_receiverEmail, var_titleEmail_1, var_outputStr_1 )
 print(var_outputStr)
@@ -92,6 +92,7 @@ if df_atcleEntyMissing_foundAlias.empty == False:
 
     news_articlesFunc.upldToAtclEnty(df_atcleEntyMissing_foundAlias)
     var_outputStr += ' SUCCESS'
+    df_atcleEntyMissing = df_atcleEntyMissing.loc[ pd.isna(df_atcleEntyMissing.entity_id) ]
 else:
     print(' no data found ')
     var_outputStr += ' no data found!!!'
@@ -101,7 +102,7 @@ var_outputStr += f"""\n****** match on alias_table END on {datetime.now().strfti
 
 
 # send checkpoint email
-var_titleEmail_1 = 'checkpoint 2' + var_titleEmail
+var_titleEmail_1 = 'checkpoint 2  ' + var_titleEmail
 var_outputStr_1 = '************************** checkpoint update **************************\n' + var_outputStr
 sendEmail(var_receiverEmail, var_titleEmail_1, var_outputStr_1 )
 print(var_outputStr)
@@ -179,6 +180,7 @@ if df_atcleEntyMissing_foundCloseMatch.empty == False:
     var_outputStr += f"""match on close_match from article_entity: {str(len(df_atcleEntyMissing_foundAlias))} """
     news_articlesFunc.upldToAtclEnty(df_atcleEntyMissing_foundCloseMatch)
     var_outputStr += ' SUCCESS'
+    df_atcleEntyMissing = df_atcleEntyMissing.loc[ pd.isna(df_atcleEntyMissing.alias_match) ]
 else:
     print(' no data found ')
     var_outputStr += ' no data found!!!'
@@ -189,7 +191,7 @@ var_outputStr += f"""\n****** close_match from article_entity END on {datetime.n
 
 
 # send checkpoint email
-var_titleEmail_1 = 'checkpoint 3' + var_titleEmail
+var_titleEmail_1 = 'checkpoint 3  ' + var_titleEmail
 var_outputStr_1 = '************************** checkpoint update **************************\n' + var_outputStr
 sendEmail(var_receiverEmail, var_titleEmail_1, var_outputStr_1 )
 print(var_outputStr)

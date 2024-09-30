@@ -2,6 +2,9 @@ from news_tools import *
 
 import news_articlesFunc
 
+
+var_titleEmail = f"""Report on Article Summary on {datetime.now().strftime('%Y-%m-%d')}"""
+
 var_upldOk = 'y'
 
 
@@ -64,10 +67,14 @@ var_outputStr += f"""\n****** key_subject END on {datetime.now().strftime('%Y-%m
 # ========================= get key_subject END =========================
 # =======================================================================
 
-# to delete checkpoint
-var_title = f"""Report on Article Summary on {datetime.now().strftime('%Y-%m-%d')} checkpoint"""
-sendEmail(var_receiverEmail, var_title, var_outputStr )
+
+
+# send checkpoint email
+var_titleEmail_1 = 'checkpoint 1 ' + var_titleEmail
+var_outputStr_1 = '************************** checkpoint update **************************\n' + var_outputStr
+sendEmail(var_receiverEmail, var_titleEmail_1, var_outputStr_1 )
 print(var_outputStr)
+
 
 
 # ========================== article groupping ==========================
@@ -182,6 +189,61 @@ for var_dtldAnalysis in ['y', 'n']:
 # =======================================================================
 
 
-var_title = f"""Report on Article Summary on {datetime.now().strftime('%Y-%m-%d')}"""
-sendEmail(var_receiverEmail, var_title, var_outputStr )
+
+# send checkpoint email
+var_titleEmail_1 = 'checkpoint 2 ' + var_titleEmail
+var_outputStr_1 = '************************** checkpoint update **************************\n' + var_outputStr
+sendEmail(var_receiverEmail, var_titleEmail_1, var_outputStr_1 )
 print(var_outputStr)
+
+
+
+
+# ========================= create news article =========================
+var_outputStr += f"""****** article writing start on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n"""
+df_atclPpln = news_connectSQL.downloadSQLQuery('article_pipeline', check_col = 'article_status', check_value = 0)
+
+df_atclPpln.sort_values(by = 'created_at', ascending = False, inplace = True)
+
+list_atclId = df_atclPpln.article_id.unique()[ : 20]
+
+var_len = len(list_atclId)
+var_i = 0
+
+var_iSccs = 0
+var_iNUrl = 0
+var_iFail = 0
+
+print(str(len(list_atclId)), ' articles to add to news_articles table' )
+
+for var_atclId in list_atclId:
+    print(var_atclId)
+    var_i += 1
+    var_counterStr = f"""{str(var_i)} of {str(var_len)}  """
+
+    var_str_1 = var_counterStr + str(var_atclId) + ' '
+    # try:
+    var_str_1 += news_articlesFunc.createAtclSumm(var_atclId)
+
+    if 'successfully uploaded' in var_str_1:
+        var_iSccs += 1
+    elif 'no URLs' in var_str_1:
+        var_iNUrl += 1
+    elif 'upload FAILED' in var_str_1:
+        var_iFail += 1
+    else:
+        pass
+
+    print(var_str_1)
+
+var_outputStr += f"""article_id allocated: {str(var_iSccs)}\narticle_id with no url {str(var_iNUrl)}\narticle_id with ERROR {str(var_iFail)}\n"""
+var_outputStr += f"""\n****** article writing {var_dtldAnalysis} END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n"""
+
+# ======================= create news article END =======================
+# =======================================================================
+
+
+
+sendEmail(var_receiverEmail, var_titleEmail, var_outputStr )
+print(var_outputStr)
+    
