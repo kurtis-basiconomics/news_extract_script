@@ -215,37 +215,44 @@ if df_atcleEntyMissing_new_enty.empty == False:
 
     df_atcleEntyMissing_new_enty['entity_id'] = np.arange(var_entyId, (var_entyId + len(df_atcleEntyMissing_new_enty)) )
     df_atcleEntyMissing_new_enty['entity_name'] = df_atcleEntyMissing_new_enty['alias_name']
+    df_atcleEntyMissing_new_enty.dropna(subset = ['entity_name'], inplace = True, ignore_index = True)
 
-    try:
-        print('uploading new entity_name to entity_table, uploading ', str(len(df_atcleEntyMissing_new_enty)), ' rows' )
-        news_connectSQL.uploadSQLQuery( df_atcleEntyMissing_new_enty.dropna(subset = ['entity_name'])[['entity_name', 'entity_id', 'entity_type']] , 'entity_table')
-        var_str_1 = f"""successfully uploaded new entity on entity_table {str(len(df_atcleEntyMissing_new_enty)) } rows"""
-    except:
-        var_str_1 = 'FAILED ON UPLOADING AVAILABLE new entity on entity_table'
-        var_titleEmail_2 = 'ERROR  ' + var_titleEmail_1
-        var_outputStr_2 = var_str_1 + '  ' + datetime.now().strftime('%Y-%m-%d %H:%M')
-        sendEmail(var_receiverEmail, var_titleEmail_2, var_outputStr_2 )
-    print(var_str_1)
-    var_outputStr += var_str_1 +'\n'
+    if df_atcleEntyMissing_new_enty.empty == False:
 
-    try:
-        print('uploading new entity_name to alias_table, uploading ', str(len(df_atcleEntyMissing_new_enty)), ' rows' )
-        news_connectSQL.uploadSQLQuery( df_atcleEntyMissing_new_enty.dropna(subset = ['entity_name'])[['entity_name', 'entity_id', 'alias_name', 'entity_type']] , 'entity_table')
-        var_str_1 = f"""successfully uploaded new entity on alias_table {str(len(df_atcleEntyMissing_new_enty)) } rows"""
-    except:
-        var_str_1 = 'FAILED ON UPLOADING AVAILABLE new entity on alias_table'
-        var_titleEmail_2 = 'ERROR  ' + var_titleEmail_1
-        var_outputStr_2 = var_str_1 + '  ' + datetime.now().strftime('%Y-%m-%d %H:%M')
-        sendEmail(var_receiverEmail, var_titleEmail_2, var_outputStr_2 )
-    print(var_str_1)
-    var_outputStr += var_str_1 +'\n'
+        try:
+            print('uploading new entity_name to entity_table, uploading ', str(len(df_atcleEntyMissing_new_enty)), ' rows' )
+            news_connectSQL.uploadSQLQuery( df_atcleEntyMissing_new_enty[['entity_name', 'entity_id', 'entity_type']] , 'entity_table')
+            var_str_1 = f"""successfully uploaded new entity on entity_table {str(len(df_atcleEntyMissing_new_enty)) } rows"""
+        except:
+            var_str_1 = 'FAILED ON UPLOADING AVAILABLE new entity on entity_table'
+            var_titleEmail_2 = 'ERROR  ' + var_titleEmail_1
+            var_outputStr_2 = var_str_1 + '  ' + datetime.now().strftime('%Y-%m-%d %H:%M')
+            sendEmail(var_receiverEmail, var_titleEmail_2, var_outputStr_2 )
+        print(var_str_1)
+        var_outputStr += var_str_1 +'\n'
 
-    var_outputStr += f"""match on close_match from article_entity: {str(len(df_atcleEntyMissing_foundAlias))} """
-    news_articlesFunc.upldToAtclEnty(df_atcleEntyMissing_new_enty.dropna(subset = ['entity_name']) )
-    var_outputStr += ' SUCCESS'
+        try:
+            print('uploading new entity_name to alias_table, uploading ', str(len(df_atcleEntyMissing_new_enty)), ' rows' )
+            news_connectSQL.uploadSQLQuery( df_atcleEntyMissing_new_enty[['entity_name', 'entity_id', 'alias_name', 'entity_type']] , 'alias_table')
+            var_str_1 = f"""successfully uploaded new entity on alias_table {str(len(df_atcleEntyMissing_new_enty)) } rows"""
+        except:
+            var_str_1 = 'FAILED ON UPLOADING AVAILABLE new entity on alias_table'
+            var_titleEmail_2 = 'ERROR  ' + var_titleEmail_1
+            var_outputStr_2 = var_str_1 + '  ' + datetime.now().strftime('%Y-%m-%d %H:%M')
+            sendEmail(var_receiverEmail, var_titleEmail_2, var_outputStr_2 )
+        print(var_str_1)
+        var_outputStr += var_str_1 +'\n'
 
-    var_outputStr += f"""\n****** new entity_name to alias_table END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n"""
+        var_outputStr += f"""created new entity_id and add to article_entity table: {str(len(df_atcleEntyMissing_new_enty))} """
+        news_articlesFunc.upldToAtclEnty(df_atcleEntyMissing_new_enty )
+        var_outputStr += ' SUCCESS'
 
+    else:
+        var_outputStr += ' NO new entity_id required. dataframe empty\n'
+else:
+    var_outputStr += ' NO new entity_id required. dataframe empty\n'
+
+var_outputStr += f"""\n****** new entity_name to alias_table END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n"""
 
 
 sendEmail(var_receiverEmail, var_titleEmail, var_outputStr )

@@ -1,7 +1,7 @@
 from news_tools import *
 
 
-var_yy = 75 # number of urls to assign in articles to check and group, for article grouping in news_articlesSumm
+var_yy = 1500 # number of urls to assign in articles to check and group, for article grouping in news_articlesSumm
 
 var_ctgrNewsDaydDelta = 10
 var_tgtAudience = var_tgtAudienceMaster
