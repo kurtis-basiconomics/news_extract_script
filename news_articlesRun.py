@@ -148,11 +148,12 @@ for var_aliasNew, var_entyType in zip(df_atcleEntyMissing.alias_name, df_atcleEn
 
 var_outputStr += f"""number of success close match found {str(var_iSccs)}""" + '\n'
 
-
+# print(df_atcleEntyMissing)
 df_atcleEntyMissing_foundCloseMatch = df_atcleEntyMissing.dropna(subset = ['entity_id'])
-# var_outputStr += '\n\n\n'
-# var_outputStr += df_atcleEntyMissing_foundCloseMatch.to_string()
-# var_outputStr += '\n\n\n'
+# print(df_atcleEntyMissing_foundCloseMatch)
+var_outputStr += '\n\n\n'
+var_outputStr += df_atcleEntyMissing_foundCloseMatch.to_string()
+var_outputStr += '\n\n\n'
 
 if df_atcleEntyMissing_foundCloseMatch.empty == False:
     # df_atcleEntyMissing_foundCloseMatch = df_atcleEntyMissing_foundCloseMatch.merge( df_alias[['curr_alias', 'entity_name', 'entity_id']] , how = 'left', left_on = 'alias_match', right_on = 'curr_alias')
@@ -198,13 +199,13 @@ print(var_outputStr)
 df_enty = news_connectSQL.downloadSQLQuery('entity_table')
 df_enty['curr_entity'] = df_enty['entity_name']
 df_enty['entity_plane'] = df_enty['entity_name'].str.lower().apply(unidecode.unidecode)
-
+# print(df_atcleEntyMissing)
 df_atcleEntyMissing_new = df_atcleEntyMissing.loc[pd.isna(df_atcleEntyMissing.entity_id)]
 
 df_atcleEntyMissing_new_enty = df_atcleEntyMissing_new.loc[
     ~(df_atcleEntyMissing_new.alias_name.isin( df_enty.entity_name.unique() ))
     ]
-
+# print(df_atcleEntyMissing_new_enty)
 if df_atcleEntyMissing_new_enty.empty == False:
 
     var_entyId = news_connectSQL.getNewEntityID()
