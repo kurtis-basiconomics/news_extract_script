@@ -13,7 +13,7 @@ list_newsSource = news_connectSQL.downloadSQLQuery('news_source_list' ).table_na
 list_actualSrc = list()
 list_scrapeOk = list()
 for var_tblName in list_newsSource:
-    var_scrapeOk = news_articlesFunc.runCtgrAndSummFunc(var_tblName)
+    var_scrapeOk = news_articlesFunc.runCtgrAndSummFunc(var_tblName, number_of_category_articles = 3)
     if var_scrapeOk > 0:
         list_actualSrc.append(var_tblName)
         list_scrapeOk.append(var_scrapeOk)
@@ -124,6 +124,12 @@ for var_aliasNew, var_entyType in zip(df_atcleEntyMissing.alias_name, df_atcleEn
 
     var_str_2 = var_counterStr + var_aliasNew + ' ' + var_entyType
     try:
+        if var_entyType == 'person':
+            # Iterate through the list and remove any occurrences of strings found in var_aliasNew
+            for title in news_articlesFunc.list_titlesToExclPpl:
+                var_aliasNew = var_aliasNew.replace(title, '')
+            var_aliasNew = var_aliasNew.strip()
+
         list_strNew = var_aliasNew.split(' ')
 
         df_aliasVar = news_connectSQL.getCloseMatchFilterAliasDF(list_strNew, var_entyType)

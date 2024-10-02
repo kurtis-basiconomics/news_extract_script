@@ -3,6 +3,8 @@ from news_tools import *
 
 var_yy = 1500 # number of urls to assign in articles to check and group, for article grouping in news_articlesSumm
 
+var_chckNewsFr = datetime.today().strftime('%Y-%m-%d')
+
 var_ctgrNewsDaydDelta = 10
 var_tgtAudience = var_tgtAudienceMaster
 var_nbrBulletPoints = 6
@@ -324,13 +326,13 @@ def runCtgrAndSummFunc(var_tblName, **argsGetSumm):
     list_strExclTitle = news_connectSQL.downloadSQLQuery('news_exclusions', check_value = [var_tblName.replace('news_', ''), 'title'] , check_col = ['news_source', 'exclusion_on'] ).table_string.tolist()
     if len(list_strExclUrl) == 0: list_strExclUrl = ['abcdefghijklmn']
 
-    df_newsSumm_news = news_connectSQL.downloadSQLQuery('news_summary', date_col = 'headline_date', date_from = var_dtFrAnalysis, check_col = 'news_source', check_value = var_tblName.replace('news_', '') )
+    df_newsSumm_news = news_connectSQL.downloadSQLQuery('news_summary', date_col = 'headline_date', date_from = var_chckNewsFr, check_col = 'news_source', check_value = var_tblName.replace('news_', '') )
     df_newsSumm_news = df_newsSumm_news.loc[ 
         (df_newsSumm_news.news_type !=  '') & (~df_newsSumm_news.news_type.isnull() ) &
         (df_newsSumm_news.summary !=  '') & (~df_newsSumm_news.summary.isnull() )
         ]
         
-    df_news = news_connectSQL.downloadSQLQuery(var_tblName, date_col = 'headline_date', date_from = var_dtFrAnalysis ) #(datetime.today() - timedelta(days = var_ctgrNewsDaydDelta) ).strftime('%Y-%m-%d') )
+    df_news = news_connectSQL.downloadSQLQuery(var_tblName, date_col = 'headline_date', date_from = var_chckNewsFr ) #(datetime.today() - timedelta(days = var_ctgrNewsDaydDelta) ).strftime('%Y-%m-%d') )
     df_news = df_news.loc[ (~df_news.news_text.isnull() ) & (df_news.news_text != '') & (~df_news.news_title.isnull() ) & (df_news.news_title != '') ]
     df_news = df_news.loc[ ~df_news.news_url.isin( df_newsSumm_news.news_url.unique() ) ]
     df_news = checkifDfOk(df_news, var_tblName)
@@ -941,4 +943,5 @@ def createAtclSumm(var_atclId):
 
 # ================================= CREATE ARTICLE SUMM END ================================
 # ==========================================================================================
+
 
