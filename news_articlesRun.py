@@ -6,39 +6,39 @@ print('\n\n')
 var_titleEmail = f"""Report on Category Summary on {datetime.now().strftime('%Y-%m-%d')}"""
 
 var_outputStr = 'see category and summary run analysis below:\n'
-# var_outputStr += f"""****** category and summary analysis start on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n"""
+var_outputStr += f"""****** category and summary analysis start on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n"""
 
-# list_newsSource = news_connectSQL.downloadSQLQuery('news_source_list' ).table_name.tolist() #['news_wsj', 'news_blm', 'news_mkw', 'news_ft'] #  
+list_newsSource = news_connectSQL.downloadSQLQuery('news_source_list' ).table_name.tolist() #['news_wsj', 'news_blm', 'news_mkw', 'news_ft'] #  
 
-# list_actualSrc = list()
-# list_scrapeOk = list()
-# for var_tblName in list_newsSource:
-#     var_scrapeOk = news_articlesFunc.runCtgrAndSummFunc(var_tblName, number_of_category_articles = 3)
-#     if var_scrapeOk > 0:
-#         list_actualSrc.append(var_tblName)
-#         list_scrapeOk.append(var_scrapeOk)
-# var_outputStr += f"""\n****** category and summary analysis END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n"""
+list_actualSrc = list()
+list_scrapeOk = list()
+for var_tblName in list_newsSource:
+    var_scrapeOk = news_articlesFunc.runCtgrAndSummFunc(var_tblName)
+    if var_scrapeOk > 0:
+        list_actualSrc.append(var_tblName)
+        list_scrapeOk.append(var_scrapeOk)
+var_outputStr += f"""\n****** category and summary analysis END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n"""
 
-# if len(list_scrapeOk) > 0:
-#     for var_scrapeOk, var_actualSrc in zip(list_scrapeOk, list_actualSrc):
-#         var_outputStr += f"""table {var_actualSrc} with {str(var_scrapeOk)} successful category \n""" 
-# else: 
-#     var_outputStr += ' no successful category'
+if len(list_scrapeOk) > 0:
+    for var_scrapeOk, var_actualSrc in zip(list_scrapeOk, list_actualSrc):
+        var_outputStr += f"""table {var_actualSrc} with {str(var_scrapeOk)} successful category \n""" 
+else: 
+    var_outputStr += ' no successful category'
 
 
-# var_outputStr += '\n\n\n'
-# var_outputStr += f"""****** split text analysis start on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n"""
-# print('\n\n start category split\n')
-# var_outputStrCtgrSplit = news_articlesFunc.runCtgrSplitText()
-# var_outputStr += var_outputStrCtgrSplit
-# var_outputStr += f"""\n****** split text analysis END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n\n"""
-# print('\n\n category split END')
+var_outputStr += '\n\n\n'
+var_outputStr += f"""****** split text analysis start on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n"""
+print('\n\n start category split\n')
+var_outputStrCtgrSplit = news_articlesFunc.runCtgrSplitText()
+var_outputStr += var_outputStrCtgrSplit
+var_outputStr += f"""\n****** split text analysis END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n\n"""
+print('\n\n category split END')
 
-# # send checkpoint email
-# var_titleEmail_1 = 'checkpoint 1  ' + var_titleEmail
-# var_outputStr_1 = '************************** checkpoint update **************************\n' + var_outputStr
-# sendEmail(var_receiverEmail, var_titleEmail_1, var_outputStr_1 )
-# print(var_outputStr)
+# send checkpoint email
+var_titleEmail_1 = 'checkpoint 1  ' + var_titleEmail
+var_outputStr_1 = '************************** checkpoint update **************************\n' + var_outputStr
+sendEmail(var_receiverEmail, var_titleEmail_1, var_outputStr_1 )
+print(var_outputStr)
 
 
 
@@ -141,10 +141,10 @@ for var_aliasNew, var_entyType in zip(df_atcleEntyMissing.alias_name, df_atcleEn
 
         df_aliasVar = news_connectSQL.getCloseMatchFilterAliasDF(list_strNew, var_entyType)
         list_closestMatch = difflib.get_close_matches(var_aliasNew, df_aliasVar.alias_name.unique(), cutoff = 0.90)
-        print(list_closestMatch)
+        # print(list_closestMatch)
 
         if len(list_closestMatch) > 0:
-            print(list_closestMatch[0])
+            # print(list_closestMatch[0])
 
             df_atcleEntyMissing.loc[
                     (df_atcleEntyMissing.alias_name == var_aliasNew) &
@@ -163,12 +163,12 @@ for var_aliasNew, var_entyType in zip(df_atcleEntyMissing.alias_name, df_atcleEn
 
 var_outputStr += f"""number of success close match found {str(var_iSccs)}""" + '\n'
 
-print(df_atcleEntyMissing)
+# print(df_atcleEntyMissing)
 df_atcleEntyMissing_foundCloseMatch = df_atcleEntyMissing.dropna(subset = ['entity_id'])
-print(df_atcleEntyMissing_foundCloseMatch)
-var_outputStr += '\n\n\n'
-var_outputStr += df_atcleEntyMissing_foundCloseMatch.to_string()
-var_outputStr += '\n\n\n'
+# print(df_atcleEntyMissing_foundCloseMatch)
+# var_outputStr += '\n\n\n'
+# var_outputStr += df_atcleEntyMissing_foundCloseMatch.to_string()
+# var_outputStr += '\n\n\n'
 
 if df_atcleEntyMissing_foundCloseMatch.empty == False:
     # df_atcleEntyMissing_foundCloseMatch = df_atcleEntyMissing_foundCloseMatch.merge( df_alias[['curr_alias', 'entity_name', 'entity_id']] , how = 'left', left_on = 'alias_match', right_on = 'curr_alias')
@@ -194,7 +194,7 @@ if df_atcleEntyMissing_foundCloseMatch.empty == False:
     var_outputStr += ' SUCCESS'
     df_atcleEntyMissing = df_atcleEntyMissing.loc[ pd.isna(df_atcleEntyMissing.entity_id) ]
 else:
-    print(' no close match to upload found')
+    print(' no data found ')
     var_outputStr += ' no close match to upload found!!!'
     var_outputStr += '\n'
 
@@ -206,7 +206,7 @@ var_outputStr += f"""\n****** close_match from article_entity END on {datetime.n
 var_titleEmail_1 = 'checkpoint 3  ' + var_titleEmail
 var_outputStr_1 = '************************** checkpoint update **************************\n' + var_outputStr
 sendEmail(var_receiverEmail, var_titleEmail_1, var_outputStr_1 )
-print(var_outputStr)
+# print(var_outputStr)
 
 
 
@@ -231,27 +231,27 @@ if df_atcleEntyMissing_new_enty.empty == False:
 
     if df_atcleEntyMissing_new_enty.empty == False:
 
-        # try:
-        print('uploading new entity_name to entity_table, uploading ', str(len(df_atcleEntyMissing_new_enty)), ' rows' )
-        news_connectSQL.uploadSQLQuery( df_atcleEntyMissing_new_enty[['entity_name', 'entity_id', 'entity_type']] , 'entity_table')
-        var_str_1 = f"""successfully uploaded new entity on entity_table {str(len(df_atcleEntyMissing_new_enty)) } rows"""
-        # except:
-        #     var_str_1 = 'FAILED ON UPLOADING AVAILABLE new entity on entity_table'
-        #     var_titleEmail_2 = 'ERROR  ' + var_titleEmail_1
-        #     var_outputStr_2 = var_str_1 + '  ' + datetime.now().strftime('%Y-%m-%d %H:%M')
-        #     sendEmail(var_receiverEmail, var_titleEmail_2, var_outputStr_2 )
+        try:
+            print('uploading new entity_name to entity_table, uploading ', str(len(df_atcleEntyMissing_new_enty)), ' rows' )
+            news_connectSQL.uploadSQLQuery( df_atcleEntyMissing_new_enty[['entity_name', 'entity_id', 'entity_type']] , 'entity_table')
+            var_str_1 = f"""successfully uploaded new entity on entity_table {str(len(df_atcleEntyMissing_new_enty)) } rows"""
+        except:
+            var_str_1 = 'FAILED ON UPLOADING AVAILABLE new entity on entity_table'
+            var_titleEmail_2 = 'ERROR  ' + var_titleEmail_1
+            var_outputStr_2 = var_str_1 + '  ' + datetime.now().strftime('%Y-%m-%d %H:%M')
+            sendEmail(var_receiverEmail, var_titleEmail_2, var_outputStr_2 )
         print(var_str_1)
         var_outputStr += var_str_1 +'\n'
 
-        # try:
-        print('uploading new entity_name to alias_table, uploading ', str(len(df_atcleEntyMissing_new_enty)), ' rows' )
-        news_connectSQL.uploadSQLQuery( df_atcleEntyMissing_new_enty[['alias_name', 'entity_name', 'entity_id', 'entity_type']] , 'alias_table')
-        var_str_1 = f"""successfully uploaded new entity on alias_table {str(len(df_atcleEntyMissing_new_enty)) } rows"""
-        # except:
-        #     var_str_1 = 'FAILED ON UPLOADING AVAILABLE new entity on alias_table'
-        #     var_titleEmail_2 = 'ERROR  ' + var_titleEmail_1
-        #     var_outputStr_2 = var_str_1 + '  ' + datetime.now().strftime('%Y-%m-%d %H:%M')
-        #     sendEmail(var_receiverEmail, var_titleEmail_2, var_outputStr_2 )
+        try:
+            print('uploading new entity_name to alias_table, uploading ', str(len(df_atcleEntyMissing_new_enty)), ' rows' )
+            news_connectSQL.uploadSQLQuery( df_atcleEntyMissing_new_enty[['alias_name', 'entity_name', 'entity_id', 'entity_type']] , 'alias_table')
+            var_str_1 = f"""successfully uploaded new entity on alias_table {str(len(df_atcleEntyMissing_new_enty)) } rows"""
+        except:
+            var_str_1 = 'FAILED ON UPLOADING AVAILABLE new entity on alias_table'
+            var_titleEmail_2 = 'ERROR  ' + var_titleEmail_1
+            var_outputStr_2 = var_str_1 + '  ' + datetime.now().strftime('%Y-%m-%d %H:%M')
+            sendEmail(var_receiverEmail, var_titleEmail_2, var_outputStr_2 )
         print(var_str_1)
         var_outputStr += var_str_1 +'\n'
 
