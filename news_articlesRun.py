@@ -150,7 +150,7 @@ for var_aliasNew, var_entyType in zip(df_atcleEntyMissing.alias_name, df_atcleEn
                     (df_atcleEntyMissing.alias_name == var_aliasNew) &
                     (df_atcleEntyMissing.entity_type == var_entyType),
                     ['alias_match', 'entity_id', 'entity_name' ]
-                ] = df_aliasVar.loc[df_aliasVar.alias_name == list_closestMatch[0]][['alias_name', 'entity_id', 'entity_name' ]]
+                ] = df_aliasVar.loc[df_aliasVar.alias_name == list_closestMatch[0]][['alias_name', 'entity_id', 'entity_name' ]].values
             var_str_2 += f""" found match with {list_closestMatch[0]} """
             var_iSccs += 1
             var_outputStr += var_str_2 + '\n'
