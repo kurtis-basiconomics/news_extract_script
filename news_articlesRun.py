@@ -56,6 +56,13 @@ var_sqlText = f"""
 df_atcleEntyMissing = news_connectSQL.getRawSQLQuery(var_sqlText)
 df_atcleEntyMissing['alias_plane'] = df_atcleEntyMissing['alias_name'].str.lower().apply(unidecode.unidecode)
 
+df_atcleEntyMissing_noEntyType = df_atcleEntyMissing.loc[pd.isna(df_atcleEntyMissing.entity_type)]
+if df_atcleEntyMissing_noEntyType.empty == False:
+    df_atcleEntyMissing_noEntyType['additional_info'] = 'no entity_type'
+    news_connectSQL.uploadSQLQuery(df_atcleEntyMissing_noEntyType[['alias_name', 'additional_info']] , 'alias_additions')
+    var_outputStr += f"""uploaded to alias_additions table because of no entity_type: {str(len(df_atcleEntyMissing_noEntyType))}\n"""
+df_atcleEntyMissing.dropna(subset = 'entity_type', ignore_index = True, inplace = True)
+
 var_outputStr += f"""missing alias_name from article_entity: {str(len(df_atcleEntyMissing))}\n"""
 var_outputStr += f"""\n****** download missing alias_name END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n\n"""
 
@@ -134,8 +141,10 @@ for var_aliasNew, var_entyType in zip(df_atcleEntyMissing.alias_name, df_atcleEn
 
         df_aliasVar = news_connectSQL.getCloseMatchFilterAliasDF(list_strNew, var_entyType)
         list_closestMatch = difflib.get_close_matches(var_aliasNew, df_aliasVar.alias_name.unique(), cutoff = 0.90)
+        print(list_closestMatch)
 
         if len(list_closestMatch) > 0:
+            print(list_closestMatch[0])
 
             df_atcleEntyMissing.loc[
                     (df_atcleEntyMissing.alias_name == var_aliasNew) &
