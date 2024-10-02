@@ -31,7 +31,7 @@ var_outputStr += f"""****** split text analysis start on {datetime.now().strftim
 print('\n\n start category split\n')
 var_outputStrCtgrSplit = news_articlesFunc.runCtgrSplitText()
 var_outputStr += var_outputStrCtgrSplit
-var_outputStr += f"""\n****** split text analysis END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n"""
+var_outputStr += f"""\n****** split text analysis END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n\n"""
 print('\n\n category split END')
 
 # send checkpoint email
@@ -57,7 +57,7 @@ df_atcleEntyMissing = news_connectSQL.getRawSQLQuery(var_sqlText)
 df_atcleEntyMissing['alias_plane'] = df_atcleEntyMissing['alias_name'].str.lower().apply(unidecode.unidecode)
 
 var_outputStr += f"""missing alias_name from article_entity: {str(len(df_atcleEntyMissing))}\n"""
-var_outputStr += f"""\n****** download missing alias_name END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n"""
+var_outputStr += f"""\n****** download missing alias_name END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n\n"""
 
 
 
@@ -98,7 +98,7 @@ else:
     var_outputStr += ' no data found!!!'
 var_outputStr += '\n'
 
-var_outputStr += f"""\n****** match on alias_table END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n"""
+var_outputStr += f"""\n****** match on alias_table END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n\n"""
 
 
 # send checkpoint email
@@ -130,11 +130,6 @@ for var_aliasNew, var_entyType in zip(df_atcleEntyMissing.alias_name, df_atcleEn
         list_closestMatch = difflib.get_close_matches(var_aliasNew, df_aliasVar.alias_name.unique(), cutoff = 0.90)
 
         if len(list_closestMatch) > 0:
-            # df_atcleEntyMissing.loc[
-            #         (df_atcleEntyMissing.alias_name == var_aliasNew) &
-            #         (df_atcleEntyMissing.entity_type == var_entyType),
-            #         'alias_match'
-            #     ] = list_closestMatch[0]
 
             df_atcleEntyMissing.loc[
                     (df_atcleEntyMissing.alias_name == var_aliasNew) &
@@ -143,6 +138,7 @@ for var_aliasNew, var_entyType in zip(df_atcleEntyMissing.alias_name, df_atcleEn
                 ] = df_aliasVar.loc[df_aliasVar.alias_name == list_closestMatch[0]][['alias_name', 'entity_id', 'entity_name', 'entity_type' ]]
             var_str_2 += f""" found match with {list_closestMatch[0]} """
             var_iSccs += 1
+            var_outputStr += var_str_2 + '\n'
             # get alias_name from df_aliasVara
         else:
             var_str_2 += ' match NOT found'
@@ -153,10 +149,10 @@ for var_aliasNew, var_entyType in zip(df_atcleEntyMissing.alias_name, df_atcleEn
 var_outputStr += f"""number of success close match found {str(var_iSccs)}""" + '\n'
 
 
-# df_alias = news_connectSQL.downloadSQLQuery('alias_table')
-# df_alias['curr_alias'] = df_alias['alias_name']
-        
-df_atcleEntyMissing_foundCloseMatch = df_atcleEntyMissing.dropna(subset = ['alias_match'])
+df_atcleEntyMissing_foundCloseMatch = df_atcleEntyMissing.dropna(subset = ['entity_id'])
+# var_outputStr += '\n\n\n'
+# var_outputStr += df_atcleEntyMissing_foundCloseMatch.to_string()
+# var_outputStr += '\n\n\n'
 
 if df_atcleEntyMissing_foundCloseMatch.empty == False:
     # df_atcleEntyMissing_foundCloseMatch = df_atcleEntyMissing_foundCloseMatch.merge( df_alias[['curr_alias', 'entity_name', 'entity_id']] , how = 'left', left_on = 'alias_match', right_on = 'curr_alias')
@@ -177,16 +173,16 @@ if df_atcleEntyMissing_foundCloseMatch.empty == False:
         print(var_str_1)
         var_outputStr += var_str_1 + '\n'
 
-    var_outputStr += f"""match on close_match from article_entity: {str(len(df_atcleEntyMissing_foundAlias))} """
+    var_outputStr += f"""match on close_match from article_entity: {str(len(df_atcleEntyMissing_foundCloseMatch))} """
     news_articlesFunc.upldToAtclEnty(df_atcleEntyMissing_foundCloseMatch)
     var_outputStr += ' SUCCESS'
-    df_atcleEntyMissing = df_atcleEntyMissing.loc[ pd.isna(df_atcleEntyMissing.alias_match) ]
+    df_atcleEntyMissing = df_atcleEntyMissing.loc[ pd.isna(df_atcleEntyMissing.entity_id) ]
 else:
     print(' no data found ')
     var_outputStr += ' no data found!!!'
     var_outputStr += '\n'
 
-var_outputStr += f"""\n****** close_match from article_entity END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n"""
+var_outputStr += f"""\n****** close_match from article_entity END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n\n"""
 
 
 
@@ -203,7 +199,7 @@ df_enty = news_connectSQL.downloadSQLQuery('entity_table')
 df_enty['curr_entity'] = df_enty['entity_name']
 df_enty['entity_plane'] = df_enty['entity_name'].str.lower().apply(unidecode.unidecode)
 
-df_atcleEntyMissing_new = df_atcleEntyMissing .loc[pd.isna(df_atcleEntyMissing.alias_match)]
+df_atcleEntyMissing_new = df_atcleEntyMissing.loc[pd.isna(df_atcleEntyMissing.entity_id)]
 
 df_atcleEntyMissing_new_enty = df_atcleEntyMissing_new.loc[
     ~(df_atcleEntyMissing_new.alias_name.isin( df_enty.entity_name.unique() ))
@@ -233,7 +229,7 @@ if df_atcleEntyMissing_new_enty.empty == False:
 
         try:
             print('uploading new entity_name to alias_table, uploading ', str(len(df_atcleEntyMissing_new_enty)), ' rows' )
-            news_connectSQL.uploadSQLQuery( df_atcleEntyMissing_new_enty[['entity_name', 'entity_id', 'alias_name', 'entity_type']] , 'alias_table')
+            news_connectSQL.uploadSQLQuery( df_atcleEntyMissing_new_enty[['alias_name', 'entity_name', 'entity_id', 'entity_type']] , 'alias_table')
             var_str_1 = f"""successfully uploaded new entity on alias_table {str(len(df_atcleEntyMissing_new_enty)) } rows"""
         except:
             var_str_1 = 'FAILED ON UPLOADING AVAILABLE new entity on alias_table'
@@ -252,7 +248,7 @@ if df_atcleEntyMissing_new_enty.empty == False:
 else:
     var_outputStr += ' NO new entity_id required. dataframe empty\n'
 
-var_outputStr += f"""\n****** new entity_name to alias_table END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n"""
+var_outputStr += f"""\n****** new entity_name to alias_table END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n\n"""
 
 
 sendEmail(var_receiverEmail, var_titleEmail, var_outputStr )
