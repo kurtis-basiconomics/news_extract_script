@@ -6,39 +6,39 @@ print('\n\n')
 var_titleEmail = f"""Report on Category Summary on {datetime.now().strftime('%Y-%m-%d')}"""
 
 var_outputStr = 'see category and summary run analysis below:\n'
-var_outputStr += f"""****** category and summary analysis start on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n"""
+# var_outputStr += f"""****** category and summary analysis start on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n"""
 
-list_newsSource = news_connectSQL.downloadSQLQuery('news_source_list' ).table_name.tolist() #['news_wsj', 'news_blm', 'news_mkw', 'news_ft'] #  
+# list_newsSource = news_connectSQL.downloadSQLQuery('news_source_list' ).table_name.tolist() #['news_wsj', 'news_blm', 'news_mkw', 'news_ft'] #  
 
-list_actualSrc = list()
-list_scrapeOk = list()
-for var_tblName in list_newsSource:
-    var_scrapeOk = news_articlesFunc.runCtgrAndSummFunc(var_tblName, number_of_category_articles = 3)
-    if var_scrapeOk > 0:
-        list_actualSrc.append(var_tblName)
-        list_scrapeOk.append(var_scrapeOk)
-var_outputStr += f"""\n****** category and summary analysis END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n"""
+# list_actualSrc = list()
+# list_scrapeOk = list()
+# for var_tblName in list_newsSource:
+#     var_scrapeOk = news_articlesFunc.runCtgrAndSummFunc(var_tblName, number_of_category_articles = 3)
+#     if var_scrapeOk > 0:
+#         list_actualSrc.append(var_tblName)
+#         list_scrapeOk.append(var_scrapeOk)
+# var_outputStr += f"""\n****** category and summary analysis END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n"""
 
-if len(list_scrapeOk) > 0:
-    for var_scrapeOk, var_actualSrc in zip(list_scrapeOk, list_actualSrc):
-        var_outputStr += f"""table {var_actualSrc} with {str(var_scrapeOk)} successful category \n""" 
-else: 
-    var_outputStr += ' no successful category'
+# if len(list_scrapeOk) > 0:
+#     for var_scrapeOk, var_actualSrc in zip(list_scrapeOk, list_actualSrc):
+#         var_outputStr += f"""table {var_actualSrc} with {str(var_scrapeOk)} successful category \n""" 
+# else: 
+#     var_outputStr += ' no successful category'
 
 
-var_outputStr += '\n\n\n'
-var_outputStr += f"""****** split text analysis start on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n"""
-print('\n\n start category split\n')
-var_outputStrCtgrSplit = news_articlesFunc.runCtgrSplitText()
-var_outputStr += var_outputStrCtgrSplit
-var_outputStr += f"""\n****** split text analysis END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n\n"""
-print('\n\n category split END')
+# var_outputStr += '\n\n\n'
+# var_outputStr += f"""****** split text analysis start on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n"""
+# print('\n\n start category split\n')
+# var_outputStrCtgrSplit = news_articlesFunc.runCtgrSplitText()
+# var_outputStr += var_outputStrCtgrSplit
+# var_outputStr += f"""\n****** split text analysis END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n\n"""
+# print('\n\n category split END')
 
-# send checkpoint email
-var_titleEmail_1 = 'checkpoint 1  ' + var_titleEmail
-var_outputStr_1 = '************************** checkpoint update **************************\n' + var_outputStr
-sendEmail(var_receiverEmail, var_titleEmail_1, var_outputStr_1 )
-print(var_outputStr)
+# # send checkpoint email
+# var_titleEmail_1 = 'checkpoint 1  ' + var_titleEmail
+# var_outputStr_1 = '************************** checkpoint update **************************\n' + var_outputStr
+# sendEmail(var_receiverEmail, var_titleEmail_1, var_outputStr_1 )
+# print(var_outputStr)
 
 
 
@@ -101,8 +101,8 @@ if df_atcleEntyMissing_foundAlias.empty == False:
     var_outputStr += ' SUCCESS'
     df_atcleEntyMissing = df_atcleEntyMissing.loc[ pd.isna(df_atcleEntyMissing.entity_id) ]
 else:
-    print(' no data found ')
-    var_outputStr += ' no data found!!!'
+    print('no alias_match found ')
+    var_outputStr += 'no alias_match found!!!'
 var_outputStr += '\n'
 
 var_outputStr += f"""\n****** match on alias_table END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n\n"""
@@ -149,8 +149,8 @@ for var_aliasNew, var_entyType in zip(df_atcleEntyMissing.alias_name, df_atcleEn
             df_atcleEntyMissing.loc[
                     (df_atcleEntyMissing.alias_name == var_aliasNew) &
                     (df_atcleEntyMissing.entity_type == var_entyType),
-                    ['alias_match', 'entity_id', 'entity_name', 'entity_type' ]
-                ] = df_aliasVar.loc[df_aliasVar.alias_name == list_closestMatch[0]][['alias_name', 'entity_id', 'entity_name', 'entity_type' ]]
+                    ['alias_match', 'entity_id', 'entity_name' ]
+                ] = df_aliasVar.loc[df_aliasVar.alias_name == list_closestMatch[0]][['alias_name', 'entity_id', 'entity_name' ]]
             var_str_2 += f""" found match with {list_closestMatch[0]} """
             var_iSccs += 1
             var_outputStr += var_str_2 + '\n'
@@ -194,7 +194,7 @@ if df_atcleEntyMissing_foundCloseMatch.empty == False:
     var_outputStr += ' SUCCESS'
     df_atcleEntyMissing = df_atcleEntyMissing.loc[ pd.isna(df_atcleEntyMissing.entity_id) ]
 else:
-    print(' no data found ')
+    print(' no close match to upload found')
     var_outputStr += ' no close match to upload found!!!'
     var_outputStr += '\n'
 
