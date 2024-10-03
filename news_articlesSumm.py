@@ -86,6 +86,8 @@ for var_dtldAnalysis in ['y', 'n']:
 
     var_outputStr += f"""****** article grouping detailed analysis {var_dtldAnalysis} start on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n"""
 
+    # try:
+
     var_lmtVal = 2 # limit of returned sql. increase when there is undefined alias_name
     var_pickVal = 0 # will pick from returned sql. increase when there is undefined alias_name
     var_i = 0
@@ -97,7 +99,7 @@ for var_dtldAnalysis in ['y', 'n']:
 
     while (var_i < var_len) and (var_end < 1):
 
-        # print('limit value:  ', str(var_lmtVal), '; pick value:  ', str(var_pickVal))
+        print('limit value:  ', str(var_lmtVal), '; pick value:  ', str(var_pickVal))
 
         var_counterStr = f"""{str(var_i)} of {str(var_len)} """
 
@@ -147,17 +149,18 @@ for var_dtldAnalysis in ['y', 'n']:
                         if (var_printUpdt =='y') or (var_printUpdt =='yes'): print('not detailed analysis ', str(var_atclId), ' with news_type: ', var_newsType, ' with urls to link:  ', len(list_urlIncl)  )
 
                     # update article pipeline
-                    list_rplcAtclId = news_articlesFunc.getAtclIdListFromUrl(list_urlIncl)
-                    if len(list_rplcAtclId) > 0:
-                        print( news_articlesFunc.upldAtclIdPipeline(list_rplcAtclId, additional_info = 'change') )
+                    if len(list_urlIncl) > 0:
+                        list_rplcAtclId = news_articlesFunc.getAtclIdListFromUrl(list_urlIncl)
+                        if len(list_rplcAtclId) > 0:
+                            print( news_articlesFunc.upldAtclIdPipeline(list_rplcAtclId, additional_info = 'change') )
 
-                    for var_urlRplc in list_urlIncl:
-                        news_connectSQL.replaceSQLQuery('article_entity', 'news_url', var_urlRplc, ['article_id', 'updated_at'] , [var_atclId, datetime.now() ] , upload_to_sql = var_upldOk)
-                        var_strVar = var_str_1 + f""" assigned to {var_urlRplc} link to {str(var_atclId)}""" 
-                        print(var_strVar)
-                    
-                    print(news_articlesFunc.upldAtclIdPipeline(var_atclId))
-                    var_iNewGroupUrl += 1
+                        for var_urlRplc in list_urlIncl:
+                            news_connectSQL.replaceSQLQuery('article_entity', 'news_url', var_urlRplc, ['article_id', 'updated_at'] , [var_atclId, datetime.now() ] , upload_to_sql = var_upldOk)
+                            var_strVar = var_str_1 + f""" assigned to {var_urlRplc} link to {str(var_atclId)}""" 
+                            print(var_strVar)
+                        
+                        print(news_articlesFunc.upldAtclIdPipeline(var_atclId))
+                        var_iNewGroupUrl += 1
 
                 # if there is unallocation alias_name, end url.
                 else:
@@ -183,6 +186,9 @@ for var_dtldAnalysis in ['y', 'n']:
             print('no more articles to summarize with detailed analysis ', var_dtldAnalysis, '\n\n\n')
 
     var_outputStr += f"""url grouped with previous articles: {str(var_iOldGroupUrl)}\nnew articles created {str(var_iNewGroupUrl)}\nurl with unallocated ERROR {str(var_iUnallocated)}\n"""
+
+    # except:
+    #     var_outputStr += f""" ERROR article grouping detailed analysis {var_dtldAnalysis}"""
     var_outputStr += f"""\n****** article grouping detailed analysis {var_dtldAnalysis} END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n"""
 
 # ======================== article groupping END ========================
@@ -201,43 +207,46 @@ print(var_outputStr)
 
 # ========================= create news article =========================
 var_outputStr += f"""****** article writing start on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n"""
-df_atclPpln = news_connectSQL.downloadSQLQuery('article_pipeline', check_col = 'article_status', check_value = 0)
+try:
+    df_atclPpln = news_connectSQL.downloadSQLQuery('article_pipeline', check_col = 'article_status', check_value = 0)
 
-df_atclPpln.sort_values(by = 'created_at', ascending = False, inplace = True)
+    df_atclPpln.sort_values(by = 'created_at', ascending = False, inplace = True)
 
-list_atclId = df_atclPpln.article_id.unique()[ : 20]
+    list_atclId = df_atclPpln.article_id.unique()[ : 20]
 
-var_len = len(list_atclId)
-var_i = 0
+    var_len = len(list_atclId)
+    var_i = 0
 
-var_iSccs = 0
-var_iNUrl = 0
-var_iFail = 0
+    var_iSccs = 0
+    var_iNUrl = 0
+    var_iFail = 0
 
-print(str(len(list_atclId)), ' articles to add to news_articles table' )
+    print(str(len(list_atclId)), ' articles to add to news_articles table' )
 
-for var_atclId in list_atclId:
-    print(var_atclId)
-    var_i += 1
-    var_counterStr = f"""{str(var_i)} of {str(var_len)}  """
+    for var_atclId in list_atclId:
+        print(var_atclId)
+        var_i += 1
+        var_counterStr = f"""{str(var_i)} of {str(var_len)}  """
 
-    var_str_1 = var_counterStr + str(var_atclId) + ' '
-    # try:
-    var_str_1 += news_articlesFunc.createAtclSumm(var_atclId)
+        var_str_1 = var_counterStr + str(var_atclId) + ' '
+        # try:
+        var_str_1 += news_articlesFunc.createAtclSumm(var_atclId)
 
-    if 'successfully uploaded' in var_str_1:
-        var_iSccs += 1
-    elif 'no URLs' in var_str_1:
-        var_iNUrl += 1
-    elif 'upload FAILED' in var_str_1:
-        var_iFail += 1
-    else:
-        pass
+        if 'successfully uploaded' in var_str_1:
+            var_iSccs += 1
+        elif 'no URLs' in var_str_1:
+            var_iNUrl += 1
+        elif 'upload FAILED' in var_str_1:
+            var_iFail += 1
+        else:
+            pass
 
-    print(var_str_1)
+        print(var_str_1)
 
-var_outputStr += f"""article_id allocated: {str(var_iSccs)}\narticle_id with no url {str(var_iNUrl)}\narticle_id with ERROR {str(var_iFail)}\n"""
-var_outputStr += f"""\n****** article writing {var_dtldAnalysis} END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n"""
+    var_outputStr += f"""article_id allocated: {str(var_iSccs)}\narticle_id with no url {str(var_iNUrl)}\narticle_id with ERROR {str(var_iFail)}\n"""
+except:
+    var_outputStr += f""" ERROR article writing"""
+var_outputStr += f"""\n****** article writing END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n"""
 
 # ======================= create news article END =======================
 # =======================================================================

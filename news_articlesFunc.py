@@ -1,7 +1,7 @@
 from news_tools import *
 
 
-var_yy = 1500 # number of urls to assign in articles to check and group, for article grouping in news_articlesSumm
+var_yy = 150 # number of urls to assign in articles to check and group, for article grouping in news_articlesSumm
 
 var_chckNewsFr = datetime.today().strftime('%Y-%m-%d')
 
@@ -943,5 +943,4 @@ def createAtclSumm(var_atclId):
 
 # ================================= CREATE ARTICLE SUMM END ================================
 # ==========================================================================================
-
 
