@@ -32,32 +32,39 @@ try:
 
         var_str_1 = var_counterStr + ' ' + var_url + ' '
 
-        news_connectSQL.replaceSQLQuery('article_entity', ['news_url'], [var_url], ['key_subject', 'updated_at'] , [0, datetime.now()], upload_to_sql = 'y')
+        df_atclEnty_var = news_connectSQL.downloadSQLQuery('article_entity', check_col = ['news_url'], check_value = [var_url])
+        df_atclEnty_var = df_atclEnty_var.loc[pd.isna(df_atclEnty_var.key_subject)]
 
-        try:
-            list_entyId = news_articlesFunc.getKeySubject(var_url)
-            if len(list_entyId)> 0:
-                var_str_1_a = news_connectSQL.replaceSQLQuery('article_entity', ['news_url', 'entity_id'], [var_url, list_entyId], ['updated_at', 'key_subject'], [datetime.now(), 1], use_quotes = 'n', upload_to_sql = 'y')
-                var_str_1_a = var_str_1 + var_str_1_a
-                print(var_str_1_a)
-                var_iKeySbjtFound += 1
-            else:
-                var_str_1 += ' no aticle_id for key subject!! '
-                var_iKeySbjtMiss += 1
-                print(var_str_1)            
+        if df_atclEnty_var.empty == False:
 
-        except:
-            var_str_1 += ' with ERROR!! '
-            var_iKeySbjtErr += 1
-            print('\n', var_str_1, '\n\n')
+            news_connectSQL.replaceSQLQuery('article_entity', ['news_url'], [var_url], ['key_subject', 'updated_at'] , [0, datetime.now()], upload_to_sql = 'y')
 
-        # checkpoint
-        if str(var_i)[-3: ] == '000':
-            # to delete checkpoint
-            var_title_1 = f"""Report on Article Summary on {datetime.now().strftime('%Y-%m-%d')} with {str(var_i)} urls proccessed checkpoint"""
-            var_outputStr_1 = var_outputStr + f"""articles with key_subject assigned: {str(var_iKeySbjtFound)}\narticles with NO key_subject {str(var_iKeySbjtMiss)}\narticles with key_subject ERROR {str(var_iKeySbjtErr)}\n"""
-            sendEmail(var_receiverEmail, var_title_1, var_outputStr_1 )
+            try:
+                list_entyId = news_articlesFunc.getKeySubject(var_url)
+                if len(list_entyId)> 0:
+                    var_str_1_a = news_connectSQL.replaceSQLQuery('article_entity', ['news_url', 'entity_id'], [var_url, list_entyId], ['updated_at', 'key_subject'], [datetime.now(), 1], use_quotes = 'n', upload_to_sql = 'y')
+                    var_str_1_a = var_str_1 + var_str_1_a
+                    print(var_str_1_a)
+                    var_iKeySbjtFound += 1
+                else:
+                    var_str_1 += ' no aticle_id for key subject!! '
+                    var_iKeySbjtMiss += 1
+                    print(var_str_1)            
 
+            except:
+                var_str_1 += ' with ERROR!! '
+                var_iKeySbjtErr += 1
+                print('\n', var_str_1, '\n\n')
+
+            # # checkpoint
+            # if str(var_i)[-3: ] == '000':
+            #     # to delete checkpoint
+            #     var_title_1 = f"""Report on Article Summary on {datetime.now().strftime('%Y-%m-%d')} with {str(var_i)} urls proccessed checkpoint"""
+            #     var_outputStr_1 = var_outputStr + f"""articles with key_subject assigned: {str(var_iKeySbjtFound)}\narticles with NO key_subject {str(var_iKeySbjtMiss)}\narticles with key_subject ERROR {str(var_iKeySbjtErr)}\n"""
+            #     sendEmail(var_receiverEmail, var_title_1, var_outputStr_1 )
+
+        else:
+            var_str_1 += ' url key subject already assigned!! '
 
     var_outputStr += f"""articles with key_subject assigned: {str(var_iKeySbjtFound)}\narticles with NO key_subject {str(var_iKeySbjtMiss)}\narticles with key_subject ERROR {str(var_iKeySbjtErr)}\n"""
 except:
@@ -136,16 +143,17 @@ for var_dtldAnalysis in ['y', 'n']:
                 # look for unallocation alias_name
                 if len(list_entyNameNA) == 0:
                     var_atclId = news_connectSQL.getNextAtclId()  
-                    var_str_1 = var_counterStr + str(var_atclId) + ' '
                     if (var_dtldAnalysis == 'y') or (var_dtldAnalysis == 'yes'):
                         if len(list_keySbjId) > 0:
                             list_urlIncl = news_articlesFunc.getSmlrAtclInfo(var_newsType, var_hdlnDt, list_entyNameRgn, after_headline_date = 'n', detailed_analysis = 'y', key_subject_list = list_keySbjId )
+                            if var_url not in list_urlIncl: list_urlIncl.append(var_url)
                             if (var_printUpdt =='y') or (var_printUpdt =='yes'): print('detailed analysis with key_subject ', str(var_atclId), ' with news_type: ', var_newsType, ' with urls to link:  ', len(list_urlIncl)  )
                         else:
                             list_urlIncl = [var_url]
                             if (var_printUpdt =='y') or (var_printUpdt =='yes'): print('single detailed analysis ', str(var_atclId), ' with news_type: ', var_newsType, ' with urls to link:  ', len(list_urlIncl)  )
                     else:
                         list_urlIncl = news_articlesFunc.getSmlrAtclInfo(var_newsType, var_hdlnDt, list_entyNameRgn, after_headline_date = 'n', detailed_analysis = 'n' )
+                        if var_url not in list_urlIncl: list_urlIncl.append(var_url)
                         if (var_printUpdt =='y') or (var_printUpdt =='yes'): print('not detailed analysis ', str(var_atclId), ' with news_type: ', var_newsType, ' with urls to link:  ', len(list_urlIncl)  )
 
                     # update article pipeline
@@ -156,12 +164,18 @@ for var_dtldAnalysis in ['y', 'n']:
 
                         for var_urlRplc in list_urlIncl:
                             news_connectSQL.replaceSQLQuery('article_entity', 'news_url', var_urlRplc, ['article_id', 'updated_at'] , [var_atclId, datetime.now() ] , upload_to_sql = var_upldOk)
-                            var_strVar = var_str_1 + f""" assigned to {var_urlRplc} link to {str(var_atclId)}""" 
+                            var_strVar = var_counterStr + f""" assigned to {var_urlRplc} link to {str(var_atclId)}""" 
                             print(var_strVar)
                         
                         print(news_articlesFunc.upldAtclIdPipeline(var_atclId))
                         var_iNewGroupUrl += 1
-
+                    else:
+                        var_str_1 = var_counterStr
+                        var_strVar = var_str_1 + var_url + f""" no linked url for {str(var_atclId)}""" 
+                        print(var_strVar)                
+                        var_lmtVal += 1
+                        var_pickVal += 1
+                        var_iUnallocated += 1 
                 # if there is unallocation alias_name, end url.
                 else:
                     var_str_1 = var_counterStr
@@ -179,7 +193,7 @@ for var_dtldAnalysis in ['y', 'n']:
             #     print('\n')
 
             var_i += 1
-            print('\n\n')
+            # print('\n\n')
         
         else:
             var_end = 1
@@ -220,30 +234,36 @@ try:
     var_iSccs = 0
     var_iNUrl = 0
     var_iFail = 0
+    var_iAsgn = 0
 
     print(str(len(list_atclId)), ' articles to add to news_articles table' )
 
     for var_atclId in list_atclId:
         print(var_atclId)
+        df_atclPpln_var = news_connectSQL.downloadSQLQuery('article_pipeline', check_col = ['article_id', 'article_status'], check_value = [var_atclId, 0])
         var_i += 1
         var_counterStr = f"""{str(var_i)} of {str(var_len)}  """
 
         var_str_1 = var_counterStr + str(var_atclId) + ' '
-        # try:
-        var_str_1 += news_articlesFunc.createAtclSumm(var_atclId)
 
-        if 'successfully uploaded' in var_str_1:
-            var_iSccs += 1
-        elif 'no URLs' in var_str_1:
-            var_iNUrl += 1
-        elif 'upload FAILED' in var_str_1:
-            var_iFail += 1
+        if (df_atclPpln_var.empty == False):
+            # try:
+            var_str_1 += news_articlesFunc.createAtclSumm(var_atclId)
+
+            if 'successfully uploaded' in var_str_1:
+                var_iSccs += 1
+            elif 'no URLs' in var_str_1:
+                var_iNUrl += 1
+            elif 'upload FAILED' in var_str_1:
+                var_iFail += 1
+            else:
+                pass
         else:
-            pass
-
+            var_str_1 += ' article already assigned'
+            var_iAsgn += 1
         print(var_str_1)
 
-    var_outputStr += f"""article_id allocated: {str(var_iSccs)}\narticle_id with no url {str(var_iNUrl)}\narticle_id with ERROR {str(var_iFail)}\n"""
+    var_outputStr += f"""article_id allocated: {str(var_iSccs)}\narticle_id with no url {str(var_iNUrl)}\narticle_id with ERROR {str(var_iFail)}article_id already assigned {str(var_iAsgn)}\n"""
 except:
     var_outputStr += f""" ERROR article writing"""
 var_outputStr += f"""\n****** article writing END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n"""
