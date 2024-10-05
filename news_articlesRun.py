@@ -34,11 +34,11 @@ var_outputStr += var_outputStrCtgrSplit
 var_outputStr += f"""\n****** split text analysis END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n\n"""
 print('\n\n category split END')
 
-# send checkpoint email
-var_titleEmail_1 = 'checkpoint 1  ' + var_titleEmail
-var_outputStr_1 = '************************** checkpoint update **************************\n' + var_outputStr
-sendEmail(var_receiverEmail, var_titleEmail_1, var_outputStr_1 )
-print(var_outputStr)
+# # send checkpoint email
+# var_titleEmail_1 = 'checkpoint 1  ' + var_titleEmail
+# var_outputStr_1 = '************************** checkpoint update **************************\n' + var_outputStr
+# sendEmail(var_receiverEmail, var_titleEmail_1, var_outputStr_1 )
+# print(var_outputStr)
 
 
 
@@ -108,11 +108,11 @@ var_outputStr += '\n'
 var_outputStr += f"""\n****** match on alias_table END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n\n"""
 
 
-# send checkpoint email
-var_titleEmail_1 = 'checkpoint 2  ' + var_titleEmail
-var_outputStr_1 = '************************** checkpoint update **************************\n' + var_outputStr
-sendEmail(var_receiverEmail, var_titleEmail_1, var_outputStr_1 )
-print(var_outputStr)
+# # send checkpoint email
+# var_titleEmail_1 = 'checkpoint 2  ' + var_titleEmail
+# var_outputStr_1 = '************************** checkpoint update **************************\n' + var_outputStr
+# sendEmail(var_receiverEmail, var_titleEmail_1, var_outputStr_1 )
+# print(var_outputStr)
 
 
 
@@ -202,11 +202,11 @@ var_outputStr += f"""\n****** close_match from article_entity END on {datetime.n
 
 
 
-# send checkpoint email
-var_titleEmail_1 = 'checkpoint 3  ' + var_titleEmail
-var_outputStr_1 = '************************** checkpoint update **************************\n' + var_outputStr
-sendEmail(var_receiverEmail, var_titleEmail_1, var_outputStr_1 )
-# print(var_outputStr)
+# # send checkpoint email
+# var_titleEmail_1 = 'checkpoint 3  ' + var_titleEmail
+# var_outputStr_1 = '************************** checkpoint update **************************\n' + var_outputStr
+# sendEmail(var_receiverEmail, var_titleEmail_1, var_outputStr_1 )
+# # print(var_outputStr)
 
 
 

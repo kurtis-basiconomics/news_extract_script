@@ -56,6 +56,8 @@ var_ctgrNewsDaydDelta = 10
 var_receiverEmail = 'kurtis@kgchua.com'
 var_nbrCtGrAnsSummAnalysis = 350
 
+var_chckPntIntvl = 50 # send emails checkpoint updates when at this interval
+
 # max tries for scraping
 var_iLen = 7
 
@@ -159,6 +161,7 @@ def getListActiveZenrows():
 
 # wsj specific - params for wsj scrape using credentials to login
 def getScrapeParamsWsj(var_zenrowsAPIKey, var_url):
+    var_sssnId = str(randint(1, 15000))
     if 'www.wsj.com' in var_url:
         var_login = var_urlWsjLogin
     elif 'www.marketwatch.com' in var_url:
@@ -182,9 +185,10 @@ def getScrapeParamsWsj(var_zenrowsAPIKey, var_url):
         ''' % var_url,
         'premium_proxy': 'true',
         "proxy_country": "us",
-        'css_extractor': '{ "header": "h1[class*=StyledHeadline]", "content": "p[class*=Paragraph]" }'
+        'css_extractor': '{ "header": "h1[class*=StyledHeadline]", "content": "p[class*=Paragraph]" }',
+        'session_id': var_sssnId
     }        
-    return params;
+    return params, var_sssnId;
 
 
 def sendEmailUpdtZenrows(var_actvZenrowsAPIName):
@@ -236,38 +240,47 @@ def getZenrowsResponse(var_url, var_param, **argsZenrows):
         var_402 = 'n'
         while (var_cntn == 0) and (var_i <= var_iLen) and (var_402 == 'n'):
             var_i += 1
-            var_zenrowsAPIKey = news_connectSQL.az_client.get_secret(var_actvZenrowsAPIName).value
-            
-            if var_param <= 1:
-                client = ZenRowsClient(var_zenrowsAPIKey )
-                if var_param == 0:
-                    response = client.get(var_url)
-                elif var_param == 1:
-                    response = client.get(var_url, params=zenrows_params_1)
-            elif var_param == 2:
-                response = requests.get(var_zenrowsUrlAPI, params=getScrapeParamsWsj(var_zenrowsAPIKey, var_url))
-            var_rspnCode = response.status_code
-            if (var_printProgress == 'y') or (var_printProgress == 'yes'): print(var_actvZenrowsAPIName, var_i, var_rspnCode)
-            # check status code to break look
-            if var_rspnCode == 200:
-                var_cntn = 1
-                var_outputStr = var_actvZenrowsAPIName + '; sc' + str(var_rspnCode) + '; run ' + str(var_i) + ' scrape success'
-                if (var_printProgress == 'y') or (var_printProgress == 'yes'): print(var_outputStr)
-                break
-            if var_rspnCode == 402:
-                var_402 = 'y'
-                try:
-                    df_upld = pd.DataFrame(
-                            [[var_actvZenrowsAPIName, var_rspnCode]],
-                            columns = ['key_vault_name', 'status_code']
-                        )
-                    news_connectSQL.uploadSQLQuery(df_upld, 'zenrows_tracker')
-                    sendEmailUpdtZenrows(var_actvZenrowsAPIName)
-                    print(var_actvZenrowsAPIName, ' status 402. sent to database')
-                except:
-                    print(var_actvZenrowsAPIName, ' error sending to database')
+            try:
+                var_zenrowsAPIKey = news_connectSQL.az_client.get_secret(var_actvZenrowsAPIName).value
+                var_rspnCode = 888
+                var_sssnId='0000'
+                
+                if var_param <= 1:
+                    client = ZenRowsClient(var_zenrowsAPIKey )
+                    if var_param == 0:
+                        response = client.get(var_url)
+                    elif var_param == 1:
+                        response = client.get(var_url, params=zenrows_params_1)
+                elif var_param == 2:
+                    dict_params, var_sssnId = getScrapeParamsWsj(var_zenrowsAPIKey, var_url)
+                    response = requests.get(var_zenrowsUrlAPI, params=dict_params)
+                    if 'https://www.wsj.com' in var_url:
+                        if getResponceToTextWsj(response) == '':
+                            response.status_code = 222
+                var_rspnCode = response.status_code
+                if (var_printProgress == 'y') or (var_printProgress == 'yes'): print(var_actvZenrowsAPIName, var_i, ' session id ', var_sssnId, var_rspnCode)
+                # check status code to break look
+                if var_rspnCode == 200:
+                    var_cntn = 1
+                    var_outputStr = var_actvZenrowsAPIName + '; sc' + str(var_rspnCode) + '; run ' + str(var_i) + ' scrape success'
+                    if (var_printProgress == 'y') or (var_printProgress == 'yes'): print(var_outputStr)
+                    break
+                if var_rspnCode == 402:
+                    var_402 = 'y'
+                    try:
+                        df_upld = pd.DataFrame(
+                                [[var_actvZenrowsAPIName, var_rspnCode]],
+                                columns = ['key_vault_name', 'status_code']
+                            )
+                        news_connectSQL.uploadSQLQuery(df_upld, 'zenrows_tracker')
+                        sendEmailUpdtZenrows(var_actvZenrowsAPIName)
+                        print(var_actvZenrowsAPIName, ' status 402. sent to database')
+                    except:
+                        print(var_actvZenrowsAPIName, ' error sending to database')
+            except:
+               if (var_printProgress == 'y') or (var_printProgress == 'yes'): print(var_actvZenrowsAPIName, var_i, ' session id ', var_sssnId, ' error on zenrows. no code') 
         else:
-            break
+            pass
 
     return response, var_outputStr;
 # ============================= zenrows scraper END =============================
@@ -1068,7 +1081,4 @@ def getSummNews(list_url):
         print(var_url)
         print(var_keyPpl, '; ', var_keyRgn, '; ', var_keyOrg)
         print(var_summ, '\n\n')
-
-
-
 
