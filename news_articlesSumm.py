@@ -76,11 +76,11 @@ var_outputStr += f"""\n****** key_subject END on {datetime.now().strftime('%Y-%m
 
 
 
-# send checkpoint email
-var_titleEmail_1 = 'checkpoint 1 ' + var_titleEmail
-var_outputStr_1 = '************************** checkpoint update **************************\n' + var_outputStr
-sendEmail(var_receiverEmail, var_titleEmail_1, var_outputStr_1 )
-print(var_outputStr)
+# # send checkpoint email
+# var_titleEmail_1 = 'checkpoint 1 ' + var_titleEmail
+# var_outputStr_1 = '************************** checkpoint update **************************\n' + var_outputStr
+# sendEmail(var_receiverEmail, var_titleEmail_1, var_outputStr_1 )
+# print(var_outputStr)
 
 
 
@@ -129,7 +129,7 @@ for var_dtldAnalysis in ['y', 'n']:
                 if len(list_atclId) > 0:
                     var_atclId = list_atclId[0]
                     if (var_printUpdt =='y') or (var_printUpdt =='yes'): print('previous similar article_id found ', str(var_atclId), ' with news_type: ', var_newsType)
-                    var_str_1 = var_counterStr + str(var_atclId) + ' '
+                    var_str_1 = var_counterStr + str(var_atclId) + ' ' + var_url + ' '
                     news_connectSQL.replaceSQLQuery('article_entity', 'news_url', var_url, ['article_id', 'updated_at'] , [var_atclId, datetime.now() ] , upload_to_sql = var_upldOk)
                     var_str_1 += news_articlesFunc.upldAtclIdPipeline(var_atclId, additional_info = 'change') 
                     print(var_str_1)
@@ -226,7 +226,7 @@ try:
 
     df_atclPpln.sort_values(by = 'created_at', ascending = False, inplace = True)
 
-    list_atclId = df_atclPpln.article_id.unique()[ : 50]
+    list_atclId = df_atclPpln.article_id.unique()[ : 350]
 
     var_len = len(list_atclId)
     var_i = 0
