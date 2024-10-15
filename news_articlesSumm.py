@@ -210,11 +210,11 @@ for var_dtldAnalysis in ['y', 'n']:
 
 
 
-# send checkpoint email
-var_titleEmail_1 = 'checkpoint 2 ' + var_titleEmail
-var_outputStr_1 = '************************** checkpoint update **************************\n' + var_outputStr
-sendEmail(var_receiverEmail, var_titleEmail_1, var_outputStr_1 )
-print(var_outputStr)
+# # send checkpoint email
+# var_titleEmail_1 = 'checkpoint 2 ' + var_titleEmail
+# var_outputStr_1 = '************************** checkpoint update **************************\n' + var_outputStr
+# sendEmail(var_receiverEmail, var_titleEmail_1, var_outputStr_1 )
+# print(var_outputStr)
 
 
 
@@ -226,7 +226,7 @@ try:
 
     df_atclPpln.sort_values(by = 'created_at', ascending = False, inplace = True)
 
-    list_atclId = df_atclPpln.article_id.unique()[ : 350]
+    list_atclId = df_atclPpln.article_id.unique()[ : 500]
 
     var_len = len(list_atclId)
     var_i = 0
