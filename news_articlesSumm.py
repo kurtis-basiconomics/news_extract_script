@@ -106,12 +106,13 @@ for var_dtldAnalysis in ['y', 'n']:
 
         while (var_i < var_len) and (var_end < 1):
 
-            print('limit value:  ', str(var_lmtVal), '; pick value:  ', str(var_pickVal))
+            if (var_printUpdt =='y') or (var_printUpdt =='yes'): print('limit value:  ', str(var_lmtVal), '; pick value:  ', str(var_pickVal))
 
             var_counterStr = f"""{str(var_i)} of {str(var_len)} """
 
 
             df_urlToAnalyse = news_articlesFunc.getUrlForAtcl(detailed_analysis = var_dtldAnalysis, url_count = var_lmtVal)
+            # print(df_urlToAnalyse, '\n\n')
             if df_urlToAnalyse.empty == False:
                 var_url, var_newsType, var_hdlnDt = df_urlToAnalyse.iloc[var_pickVal][['news_url', 'news_type', 'headline_date']]
                 df_atclEntyVar1 = news_connectSQL.downloadSQLQuery('article_entity', check_col = 'news_url', check_value = var_url)
@@ -120,7 +121,7 @@ for var_dtldAnalysis in ['y', 'n']:
 
                 # look for similar articles already tagged
                 list_atclId = list()
-                if (var_dtldAnalysis == 'y') and (var_dtldAnalysis == 'yes'):
+                if (var_dtldAnalysis == 'y') or (var_dtldAnalysis == 'yes'):
                     if len(list_keySbjId) > 0:
                         list_atclId = news_articlesFunc.getSmlrAtclInfo(var_newsType, var_hdlnDt, list_entyNameRgn, after_headline_date = 'y', detailed_analysis = 'y', key_subject_list = list_keySbjId )
                 else:
@@ -226,7 +227,7 @@ try:
 
     df_atclPpln.sort_values(by = 'created_at', ascending = False, inplace = True)
 
-    list_atclId = df_atclPpln.article_id.unique()[ : 500]
+    list_atclId = df_atclPpln.article_id.unique()[ : 550]
 
     var_len = len(list_atclId)
     var_i = 0
@@ -239,12 +240,17 @@ try:
     print(str(len(list_atclId)), ' articles to add to news_articles table' )
 
     for var_atclId in list_atclId:
-        print(var_atclId)
+        # print(var_atclId)
+        df_atclSumm_var = news_connectSQL.downloadSQLQuery('news_articles', check_col = 'article_id', check_value = var_atclId)
         df_atclPpln_var = news_connectSQL.downloadSQLQuery('article_pipeline', check_col = ['article_id', 'article_status'], check_value = [var_atclId, 0])
         var_i += 1
         var_counterStr = f"""{str(var_i)} of {str(var_len)}  """
 
         var_str_1 = var_counterStr + str(var_atclId) + ' '
+
+        if (df_atclSumm_var.empty == False):
+            news_connectSQL.deleteSQLRow('news_articles', 'article_id', var_atclId, confirm_delete = 'y')
+            var_str_1 += ' atcl to be REPLACED; '
 
         if (df_atclPpln_var.empty == False):
             # try:
