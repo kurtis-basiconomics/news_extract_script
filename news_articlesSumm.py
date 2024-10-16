@@ -6,6 +6,7 @@ import news_articlesFunc
 var_titleEmail = f"""Report on Article Summary on {datetime.now().strftime('%Y-%m-%d')}"""
 
 var_upldOk = 'y'
+var_printUpdt = 'n'
 
 
 print('\n\n')
@@ -68,6 +69,7 @@ try:
 
     var_outputStr += f"""articles with key_subject assigned: {str(var_iKeySbjtFound)}\narticles with NO key_subject {str(var_iKeySbjtMiss)}\narticles with key_subject ERROR {str(var_iKeySbjtErr)}\n"""
 except:
+    var_outputStr += f"""articles with key_subject assigned: {str(var_iKeySbjtFound)}\narticles with NO key_subject {str(var_iKeySbjtMiss)}\narticles with key_subject ERROR {str(var_iKeySbjtErr)}\n"""
     var_outputStr += 'FAILED\n'
 var_outputStr += f"""\n****** key_subject END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n"""
 
@@ -86,7 +88,7 @@ var_outputStr += f"""\n****** key_subject END on {datetime.now().strftime('%Y-%m
 
 # ========================== article groupping ==========================
 
-var_printUpdt = 'y'
+
 var_len = news_articlesFunc.var_yy
 
 for var_dtldAnalysis in ['y', 'n']:
@@ -103,6 +105,7 @@ for var_dtldAnalysis in ['y', 'n']:
         var_iOldGroupUrl = 0
         var_iNewGroupUrl = 0
         var_iUnallocated = 0
+        var_iNoRegion = 0
 
         while (var_i < var_len) and (var_end < 1):
 
@@ -119,91 +122,106 @@ for var_dtldAnalysis in ['y', 'n']:
                 list_entyNameRgn = df_atclEntyVar1.loc[(df_atclEntyVar1.entity_type == 'region')].entity_name.tolist()
                 list_keySbjId = df_atclEntyVar1.loc[(df_atclEntyVar1.key_subject == '1') & (df_atclEntyVar1.entity_type != 'region')].entity_id.tolist()
 
-                # look for similar articles already tagged
-                list_atclId = list()
-                if (var_dtldAnalysis == 'y') or (var_dtldAnalysis == 'yes'):
-                    if len(list_keySbjId) > 0:
-                        list_atclId = news_articlesFunc.getSmlrAtclInfo(var_newsType, var_hdlnDt, list_entyNameRgn, after_headline_date = 'y', detailed_analysis = 'y', key_subject_list = list_keySbjId )
-                else:
-                    list_atclId = news_articlesFunc.getSmlrAtclInfo(var_newsType, var_hdlnDt, list_entyNameRgn, after_headline_date = 'y', detailed_analysis = 'n' )
+                # check if article_entity for url has region
+                if len(list_entyNameRgn) > 0:
+                    # look for similar articles already tagged
+                    list_atclId = list()
+                    if (var_dtldAnalysis == 'y') or (var_dtldAnalysis == 'yes'):
+                        if len(list_keySbjId) > 0:
+                            list_atclId = news_articlesFunc.getSmlrAtclInfo(var_newsType, var_hdlnDt, list_entyNameRgn, after_headline_date = 'y', detailed_analysis = 'y', key_subject_list = list_keySbjId )
+                    else:
+                        list_atclId = news_articlesFunc.getSmlrAtclInfo(var_newsType, var_hdlnDt, list_entyNameRgn, after_headline_date = 'y', detailed_analysis = 'n' )
 
-                if len(list_atclId) > 0:
-                    var_atclId = list_atclId[0]
-                    if (var_printUpdt =='y') or (var_printUpdt =='yes'): print('previous similar article_id found ', str(var_atclId), ' with news_type: ', var_newsType)
-                    var_str_1 = var_counterStr + str(var_atclId) + ' ' + var_url + ' '
-                    news_connectSQL.replaceSQLQuery('article_entity', 'news_url', var_url, ['article_id', 'updated_at'] , [var_atclId, datetime.now() ] , upload_to_sql = var_upldOk)
-                    var_str_1 += news_articlesFunc.upldAtclIdPipeline(var_atclId, additional_info = 'change') 
-                    print(var_str_1)
+                    if len(list_atclId) > 0:
+                        var_atclId = list_atclId[0]
+                        if (var_printUpdt =='y') or (var_printUpdt =='yes'): print('previous similar article_id found ', str(var_atclId), ' with news_type: ', var_newsType)
+                        var_str_1 = var_counterStr + str(var_atclId) + ' ' + var_url + ' '
+                        news_connectSQL.replaceSQLQuery('article_entity', 'news_url', var_url, ['article_id', 'updated_at'] , [var_atclId, datetime.now() ] , upload_to_sql = var_upldOk)
+                        var_str_1 += news_articlesFunc.upldAtclIdPipeline(var_atclId, additional_info = 'change') 
+                        print(var_str_1)
 
-                    var_iOldGroupUrl += 0
+                        var_iOldGroupUrl += 0
 
 
-                else:
-                    list_entyNameNA = df_atclEntyVar1.loc[(df_atclEntyVar1.entity_id.isnull()) | (pd.isna(df_atclEntyVar1.entity_id)) | ((df_atclEntyVar1.entity_id == ''))].alias_name.unique()
-                    
-                    # look for unallocation alias_name
-                    if len(list_entyNameNA) == 0:
-                        var_atclId = news_connectSQL.getNextAtclId()  
-                        if (var_dtldAnalysis == 'y') or (var_dtldAnalysis == 'yes'):
-                            if len(list_keySbjId) > 0:
-                                list_urlIncl = news_articlesFunc.getSmlrAtclInfo(var_newsType, var_hdlnDt, list_entyNameRgn, after_headline_date = 'n', detailed_analysis = 'y', key_subject_list = list_keySbjId )
-                                if var_url not in list_urlIncl: list_urlIncl.append(var_url)
-                                if (var_printUpdt =='y') or (var_printUpdt =='yes'): print('detailed analysis with key_subject ', str(var_atclId), ' with news_type: ', var_newsType, ' with urls to link:  ', len(list_urlIncl)  )
+                    else:
+                        list_entyNameNA = df_atclEntyVar1.loc[(df_atclEntyVar1.entity_id.isnull()) | (pd.isna(df_atclEntyVar1.entity_id)) | ((df_atclEntyVar1.entity_id == ''))].alias_name.unique()
+                        
+                        # look for unallocation alias_name
+                        if (len(list_entyNameNA) == 0):
+                            var_atclId = news_connectSQL.getNextAtclId()  
+                            if (var_dtldAnalysis == 'y') or (var_dtldAnalysis == 'yes'):
+                                if len(list_keySbjId) > 0:
+                                    list_urlIncl = news_articlesFunc.getSmlrAtclInfo(var_newsType, var_hdlnDt, list_entyNameRgn, after_headline_date = 'n', detailed_analysis = 'y', key_subject_list = list_keySbjId )
+                                    if var_url not in list_urlIncl: list_urlIncl.append(var_url)
+                                    if (var_printUpdt =='y') or (var_printUpdt =='yes'): print('detailed analysis with key_subject ', str(var_atclId), ' with news_type: ', var_newsType, ' with urls to link:  ', len(list_urlIncl)  )
+                                else:
+                                    list_urlIncl = [var_url]
+                                    if (var_printUpdt =='y') or (var_printUpdt =='yes'): print('single detailed analysis ', str(var_atclId), ' with news_type: ', var_newsType, ' with urls to link:  ', len(list_urlIncl)  )
                             else:
-                                list_urlIncl = [var_url]
-                                if (var_printUpdt =='y') or (var_printUpdt =='yes'): print('single detailed analysis ', str(var_atclId), ' with news_type: ', var_newsType, ' with urls to link:  ', len(list_urlIncl)  )
-                        else:
-                            list_urlIncl = news_articlesFunc.getSmlrAtclInfo(var_newsType, var_hdlnDt, list_entyNameRgn, after_headline_date = 'n', detailed_analysis = 'n' )
-                            if var_url not in list_urlIncl: list_urlIncl.append(var_url)
-                            if (var_printUpdt =='y') or (var_printUpdt =='yes'): print('not detailed analysis ', str(var_atclId), ' with news_type: ', var_newsType, ' with urls to link:  ', len(list_urlIncl)  )
+                                list_urlIncl = news_articlesFunc.getSmlrAtclInfo(var_newsType, var_hdlnDt, list_entyNameRgn, after_headline_date = 'n', detailed_analysis = 'n' )
+                                if var_url not in list_urlIncl: list_urlIncl.append(var_url)
+                                if (var_printUpdt =='y') or (var_printUpdt =='yes'): print('not detailed analysis ', str(var_atclId), ' with news_type: ', var_newsType, ' with urls to link:  ', len(list_urlIncl)  )
 
-                        # update article pipeline
-                        if len(list_urlIncl) > 0:
-                            list_rplcAtclId = news_articlesFunc.getAtclIdListFromUrl(list_urlIncl)
-                            if len(list_rplcAtclId) > 0:
-                                print( news_articlesFunc.upldAtclIdPipeline(list_rplcAtclId, additional_info = 'change') )
+                            # update article pipeline
+                            if len(list_urlIncl) > 0:
+                                list_rplcAtclId = news_articlesFunc.getAtclIdListFromUrl(list_urlIncl)
+                                if len(list_rplcAtclId) > 0:
+                                    print( news_articlesFunc.upldAtclIdPipeline(list_rplcAtclId, additional_info = 'change') )
 
-                            for var_urlRplc in list_urlIncl:
-                                news_connectSQL.replaceSQLQuery('article_entity', 'news_url', var_urlRplc, ['article_id', 'updated_at'] , [var_atclId, datetime.now() ] , upload_to_sql = var_upldOk)
-                                var_strVar = var_counterStr + f""" assigned to {var_urlRplc} link to {str(var_atclId)}""" 
-                                print(var_strVar)
-                            
-                            print(news_articlesFunc.upldAtclIdPipeline(var_atclId))
-                            var_iNewGroupUrl += 1
+                                for var_urlRplc in list_urlIncl:
+                                    news_connectSQL.replaceSQLQuery('article_entity', 'news_url', var_urlRplc, ['article_id', 'updated_at'] , [var_atclId, datetime.now() ] , upload_to_sql = var_upldOk)
+                                    var_strVar = var_counterStr + f""" assigned to {var_urlRplc} link to {str(var_atclId)}""" 
+                                    print(var_strVar)
+                                
+                                print(news_articlesFunc.upldAtclIdPipeline(var_atclId))
+                                var_iNewGroupUrl += 1
+                            else:
+                                var_str_1 = var_counterStr
+                                var_strVar = var_str_1 + var_url + f""" no linked url for {str(var_atclId)}""" 
+                                print(var_strVar)                
+                                var_lmtVal += 1
+                                var_pickVal += 1
+                                var_iUnallocated += 1 
+                        # if there is unallocation alias_name, end url.
                         else:
                             var_str_1 = var_counterStr
-                            var_strVar = var_str_1 + var_url + f""" no linked url for {str(var_atclId)}""" 
+                            var_strVar = var_str_1 + var_url + f""" contains unallocated entity_name {str(list_entyNameNA)}""" 
                             print(var_strVar)                
                             var_lmtVal += 1
                             var_pickVal += 1
                             var_iUnallocated += 1 
-                    # if there is unallocation alias_name, end url.
-                    else:
-                        var_str_1 = var_counterStr
-                        var_strVar = var_str_1 + var_url + f""" contains unallocated entity_name {str(list_entyNameNA)}""" 
-                        print(var_strVar)                
-                        var_lmtVal += 1
-                        var_pickVal += 1
-                        var_iUnallocated += 1 
 
-                # except Exception as e:
-                #     print('\n\n')
-                #     for var_urlRplc in list_urlIncl:
-                #         var_strVar = var_str_1 + '  with ERROR assigning article_id'
-                #         print(var_strVar)
-                #     print('\n')
+                    # except Exception as e:
+                    #     print('\n\n')
+                    #     for var_urlRplc in list_urlIncl:
+                    #         var_strVar = var_str_1 + '  with ERROR assigning article_id'
+                    #         print(var_strVar)
+                    #     print('\n')
 
-                var_i += 1
-                # print('\n\n')
-            
+                    var_i += 1
+                    # print('\n\n')
+
+                else:
+                    var_str_1 = var_counterStr
+                    var_strVar = var_str_1 + var_url + f""" does not have region as entity_type""" 
+                    print(var_strVar)                
+                    var_lmtVal += 1
+                    var_pickVal += 1
+                    var_iNoRegion += 1                     
+
             else:
                 var_end = 1
                 print('no more articles to summarize with detailed analysis ', var_dtldAnalysis, '\n\n\n')
 
-        var_outputStr += f"""url grouped with previous articles: {str(var_iOldGroupUrl)}\nnew articles created {str(var_iNewGroupUrl)}\nurl with unallocated ERROR {str(var_iUnallocated)}\n"""
+
+
+
+        var_outputStr += f"""url grouped with previous articles: {str(var_iOldGroupUrl)}\nnew articles created {str(var_iNewGroupUrl)}\nurl with unallocated ERROR {str(var_iUnallocated)}\nurl with no region {str(var_iNoRegion)}\n"""
 
     except:
+        var_outputStr += f"""url grouped with previous articles: {str(var_iOldGroupUrl)}\nnew articles created {str(var_iNewGroupUrl)}\nurl with unallocated ERROR {str(var_iUnallocated)}\nurl with no region {str(var_iNoRegion)}\n"""
         var_outputStr += f""" ERROR article grouping detailed analysis {var_dtldAnalysis}"""
+
     var_outputStr += f"""\n****** article grouping detailed analysis {var_dtldAnalysis} END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n"""
 
 # ======================== article groupping END ========================
@@ -271,6 +289,7 @@ try:
 
     var_outputStr += f"""article_id allocated: {str(var_iSccs)}\narticle_id with no url {str(var_iNUrl)}\narticle_id with ERROR {str(var_iFail)}article_id already assigned {str(var_iAsgn)}\n"""
 except:
+    var_outputStr += f"""article_id allocated: {str(var_iSccs)}\narticle_id with no url {str(var_iNUrl)}\narticle_id with ERROR {str(var_iFail)}article_id already assigned {str(var_iAsgn)}\n"""
     var_outputStr += f""" ERROR article writing"""
 var_outputStr += f"""\n****** article writing END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n"""
 
