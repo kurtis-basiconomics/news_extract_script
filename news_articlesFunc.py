@@ -1,7 +1,7 @@
 from news_tools import *
 
 
-var_yy = 500 # number of urls to assign in articles to check and group, for article grouping in news_articlesSumm
+var_yy = 750 # number of urls to assign in articles to check and group, for article grouping in news_articlesSumm
 
 var_chckNewsFr = datetime.today().strftime('%Y-%m-%d')
 
@@ -395,6 +395,7 @@ def upldNewAliasFromSplitText(df_atclEnty_new):
     if df_atclEnty_new.empty == False:
         # Upload alias_name already available
         df_atclEnty_new_upld = df_atclEnty_new.dropna(subset = ['entity_name', 'entity_id'])
+        df_atclEnty_new_upld.drop_duplicates(subset = ['alias_name', 'news_url'], inplace = True, ignore_index = True)
         if df_atclEnty_new_upld.empty == False:
             try:
                 print('uploading article_entity with available alias_name, uploading ', str(len(df_atclEnty_new_upld)), ' rows' )
@@ -408,6 +409,7 @@ def upldNewAliasFromSplitText(df_atclEnty_new):
             var_outputStr += ' no FOUND alias_name\n'
         # Upload alias_name NOT available
         df_atclEnty_new_new = df_atclEnty_new.loc[pd.isna( df_atclEnty_new.entity_name ) ][[ 'alias_name', 'entity_type' , 'news_url' ]]
+        df_atclEnty_new_new.drop_duplicates(subset = ['alias_name', 'news_url'], inplace = True, ignore_index = True)
         if df_atclEnty_new_new.empty == False:
             try:
                 print('uploading article_entity with available alias_name, uploading ', str(len(df_atclEnty_new_new)), ' rows' )
@@ -888,55 +890,55 @@ def getMaxHdlnDt(list_urlAtclSumm):
 
 
 def createAtclSumm(var_atclId):
-    try:
-        list_urlAtclSumm = news_connectSQL.downloadSQLQuery('article_entity', check_col = 'article_id', check_value = var_atclId)['news_url'].unique()
-        # print(list_urlAtclSumm)
-        if len(list_urlAtclSumm) > 0:
-            if len(list_urlAtclSumm) > 1:
-                # print(str(len(list_urlAtclSumm)), 'use gpt to merge articles')
-                var_summ, var_rcmdHdln, list_keyRgn, list_keyPpl, list_keyOrg, list_newsType, list_newsSrc = getSummOfSmlrAtcl(list_urlAtclSumm)
+    # try:
+    list_urlAtclSumm = news_connectSQL.downloadSQLQuery('article_entity', check_col = 'article_id', check_value = var_atclId)['news_url'].unique()
+    # print(list_urlAtclSumm)
+    if len(list_urlAtclSumm) > 0:
+        if len(list_urlAtclSumm) > 1:
+            # print(str(len(list_urlAtclSumm)), 'use gpt to merge articles')
+            var_summ, var_rcmdHdln, list_keyRgn, list_keyPpl, list_keyOrg, list_newsType, list_newsSrc = getSummOfSmlrAtcl(list_urlAtclSumm)
 
-            elif len(list_urlAtclSumm) == 1:
-                # print(list_urlAtclSumm, 'NO gpt to merge articles')
-                var_url = list_urlAtclSumm[0]
-                df_newsSumm_var = news_connectSQL.downloadSQLQuery('news_summary', check_col = 'news_url', check_value = var_url)
-                df_atclEnty_var = news_connectSQL.downloadSQLQuery('article_entity', check_col = 'news_url', check_value = var_url)
+        elif len(list_urlAtclSumm) == 1:
+            # print(list_urlAtclSumm, 'NO gpt to merge articles')
+            var_url = list_urlAtclSumm[0]
+            df_newsSumm_var = news_connectSQL.downloadSQLQuery('news_summary', check_col = 'news_url', check_value = var_url)
+            df_atclEnty_var = news_connectSQL.downloadSQLQuery('article_entity', check_col = 'news_url', check_value = var_url)
 
-                var_rcmdHdln, var_summ = df_newsSumm_var.iloc[0][['recommended_headline', 'summary']]
+            var_rcmdHdln, var_summ = df_newsSumm_var.iloc[0][['recommended_headline', 'summary']]
 
-                list_keyPpl = df_atclEnty_var.loc[(~pd.isna(df_atclEnty_var.entity_name)) & (df_atclEnty_var.entity_type == 'person')].entity_name.unique()
-                list_keyOrg = df_atclEnty_var.loc[(~pd.isna(df_atclEnty_var.entity_name)) & (df_atclEnty_var.entity_type == 'company')].entity_name.unique()
-                list_keyRgn = df_atclEnty_var.loc[(~pd.isna(df_atclEnty_var.entity_name)) & (df_atclEnty_var.entity_type == 'region')].entity_name.unique()
-                list_newsType = df_newsSumm_var.news_type.unique()
-                list_newsSrc = df_newsSumm_var.news_source.unique()    
+            list_keyPpl = df_atclEnty_var.loc[(~pd.isna(df_atclEnty_var.entity_name)) & (df_atclEnty_var.entity_type == 'person')].entity_name.unique()
+            list_keyOrg = df_atclEnty_var.loc[(~pd.isna(df_atclEnty_var.entity_name)) & (df_atclEnty_var.entity_type == 'company')].entity_name.unique()
+            list_keyRgn = df_atclEnty_var.loc[(~pd.isna(df_atclEnty_var.entity_name)) & (df_atclEnty_var.entity_type == 'region')].entity_name.unique()
+            list_newsType = df_newsSumm_var.news_type.unique()
+            list_newsSrc = df_newsSumm_var.news_source.unique()    
 
-            var_hdlnDt = getMaxHdlnDt(list_urlAtclSumm)
-            var_summ = cleanArticleSumm(var_summ)
+        var_hdlnDt = getMaxHdlnDt(list_urlAtclSumm)
+        var_summ = cleanArticleSumm(var_summ)
 
-            list_valUpld = [var_atclId, 'article_summ', 1, var_rcmdHdln, var_summ, list_newsType[0], len(list_newsSrc), datetime.now(), pd.to_datetime(var_hdlnDt).date[0] ]
-            list_colUpld = ['article_id', 'article_type', 'analysis_version', 'recommended_headline', 'summary', 'news_type', 'source_count', 'created_at', 'headline_date' ]
+        list_valUpld = [var_atclId, 'article_summ', 1, var_rcmdHdln, var_summ, list_newsType[0], len(list_newsSrc), datetime.now(), pd.to_datetime(var_hdlnDt).date[0] ]
+        list_colUpld = ['article_id', 'article_type', 'analysis_version', 'recommended_headline', 'summary', 'news_type', 'source_count', 'created_at', 'headline_date' ]
 
-            for var_yy, var_col in zip([list_newsSrc, list_keyPpl, list_keyRgn, list_keyOrg, list_urlAtclSumm] , ['news_source', 'key_people', 'region', 'key_organizations', 'news_url']):
-                if len(var_yy) > 0 :
-                    var_yy = ', '.join(var_yy)
+        for var_yy, var_col in zip([list_newsSrc, list_keyPpl, list_keyRgn, list_keyOrg, list_urlAtclSumm] , ['news_source', 'key_people', 'region', 'key_organizations', 'news_url']):
+            if len(var_yy) > 0 :
+                var_yy = ', '.join(var_yy)
 
-                    list_valUpld.append(var_yy)
-                    list_colUpld.append(var_col)
+                list_valUpld.append(var_yy)
+                list_colUpld.append(var_col)
 
-            df_var = pd.DataFrame([list_valUpld], columns = list_colUpld)
+        df_var = pd.DataFrame([list_valUpld], columns = list_colUpld)
 
-            news_connectSQL.uploadSQLQuery(df_var, 'news_articles')
+        news_connectSQL.uploadSQLQuery(df_var, 'news_articles')
 
-            var_outputStr = f"""article {str(var_atclId)} with headline {str(var_rcmdHdln)[ : 50]} successfully uploaded """
+        var_outputStr = f"""article {str(var_atclId)} with headline {str(var_rcmdHdln)[ : 50]} successfully uploaded """
 
-            news_connectSQL.replaceSQLQuery('article_pipeline', ['article_id', 'article_status'], [var_atclId, 0], ['article_status', 'updated_at'], [ 1, datetime.now()], upload_to_sql = 'y') 
+        news_connectSQL.replaceSQLQuery('article_pipeline', ['article_id', 'article_status'], [var_atclId, 0], ['article_status', 'updated_at'], [ 1, datetime.now()], upload_to_sql = 'y') 
 
-        else:
-            var_outputStr = f"""article {str(var_atclId)} no URLs, closing article_id"""
-            news_connectSQL.replaceSQLQuery('article_pipeline', ['article_id', 'article_status'], [var_atclId, 0], ['article_status', 'updated_at'], [ 2, datetime.now()], upload_to_sql = 'y') 
+    else:
+        var_outputStr = f"""article {str(var_atclId)} no URLs, closing article_id"""
+        news_connectSQL.replaceSQLQuery('article_pipeline', ['article_id', 'article_status'], [var_atclId, 0], ['article_status', 'updated_at'], [ 2, datetime.now()], upload_to_sql = 'y') 
 
-    except:
-        var_outputStr = f"""article {str(var_atclId)} upload FAILED"""
+    # except:
+    #     var_outputStr = f"""article {str(var_atclId)} upload FAILED"""
 
     return var_outputStr;
 

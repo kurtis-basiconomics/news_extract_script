@@ -88,7 +88,7 @@ if df_atcleEntyMissing_foundAlias.empty == False:
             var_str_1 = f"""successfully uploaded match on alias_table {str(len(df_atcleEntyMissing_foundAlias_newAlias))} rows"""
         except:
             var_str_1 = 'FAILED ON UPLOADING AVAILABLE match on alias_table'
-            var_titleEmail_2 = 'ERROR  ' + var_titleEmail_1
+            var_titleEmail_2 = 'ERROR  ' + var_str_1
             var_outputStr_2 = var_str_1 + '  ' + datetime.now().strftime('%Y-%m-%d %H:%M')
             sendEmail(var_receiverEmail, var_titleEmail_2, var_outputStr_2 )
 
