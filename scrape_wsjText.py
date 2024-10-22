@@ -7,6 +7,15 @@ var_tblName_1 = 'news_mkw'
 
 var_upldOk = 'y'
 
+list_kywd = ['/business/', '/finance/', '/tech/', '/economy/']
+
+# Function to check if the URL contains any of the keywords
+def checkUrlPriority(var_url):
+  if any(keyword in var_url for keyword in list_kywd):
+    return 1
+  else:
+    return 0
+
 # function to extract list of url to download
 
 def getUrlList():
@@ -23,7 +32,10 @@ def getUrlList():
 
     df_sql['news_url'] = df_sql.news_url.str.split('?').str[0]
     df_sql.drop_duplicates(subset = ['news_url'], keep = 'first', inplace = True, ignore_index = True)
-    df_sql.sort_values(by = 'headline_date' , ascending = False, ignore_index = True, inplace = True)
+    # Apply the function to the 'news_url' column and create a new column 'score'
+    df_sql['priority_score'] = df_sql['news_url'].apply(checkUrlPriority)
+    df_sql.sort_values(by = ['priority_score', 'headline_date'] , ascending = False, ignore_index = True, inplace = True)
+    df_sql.drop(columns = ['priority_score'], inplace = True)
 
     list_urlDwld = df_sql.news_url.unique()
 
@@ -39,11 +51,13 @@ var_iStop = 0
 print(var_tblName, len(list_urlDwldTtl) , ' to analyse')
 
 
-var_titleEmail = f"""wsj scrape on {datetime.now().strftime('%Y-%m-%d')}"""
+var_titleEmail = f"""LOCAL wsj scrape on {datetime.now().strftime('%Y-%m-%d')}"""
 
 var_outputStr = 'wsj news scrape start:\n'
 var_outputStr += f"""****** wsj news_scrape start on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n"""
 
+var_i = 0
+var_len = len(list_urlDwldTtl)
 
 while (var_maxLoop >= var_iLoop) and (var_iStop == 0):
 
@@ -51,8 +65,7 @@ while (var_maxLoop >= var_iLoop) and (var_iStop == 0):
 
     var_iLoop += 1
 
-    var_i = 0
-    var_len = len(list_urlDwld)
+
 
     var_iSccs = 0
     var_iEmty = 0
