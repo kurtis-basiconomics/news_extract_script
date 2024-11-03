@@ -641,6 +641,7 @@ def getUrlForAtcl(**argsAtclBuild):
             from basiconomics_news_schema.article_entity ae
             left join basiconomics_news_schema.news_summary ns on ns.news_url = ae.news_url
             where ae.article_id is null
+            and ns.headline_date is not null
             and ns.category in ( select category from basiconomics_news_schema.news_type_category where detailed_analysis = {var_dtldAnlsVal} )
             group by 1, 2, 3, 4
             order by ns.headline_date desc
