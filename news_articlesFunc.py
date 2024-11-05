@@ -892,6 +892,11 @@ def getMaxHdlnDt(list_urlAtclSumm):
 
 def createAtclSumm(var_atclId):
     # try:
+    df_atclSumm_var = news_connectSQL.downloadSQLQuery('news_articles', check_col = 'article_id', check_value = var_atclId)
+    var_rplcAtclId = 'n'
+    if (df_atclSumm_var.empty == False):
+        var_rplcAtclId = 'y'
+
     list_urlAtclSumm = news_connectSQL.downloadSQLQuery('article_entity', check_col = 'article_id', check_value = var_atclId)['news_url'].unique()
     # print(list_urlAtclSumm)
     if len(list_urlAtclSumm) > 0:
@@ -917,20 +922,21 @@ def createAtclSumm(var_atclId):
         var_summ = cleanArticleSumm(var_summ)
 
         list_valUpld = [var_atclId, 'article_summ', 1, var_rcmdHdln, var_summ, list_newsType[0], len(list_newsSrc), datetime.now(), pd.to_datetime(var_hdlnDt).date[0] ]
-        list_colUpld = ['article_id', 'article_type', 'analysis_version', 'recommended_headline', 'summary', 'news_type', 'source_count', 'created_at', 'headline_date' ]
+        list_colUpld = ['article_id', 'article_type', 'analysis_version', 'recommended_headline', 'summary', 'news_type', 'source_count', 'updated_at', 'headline_date' ]
 
         for var_yy, var_col in zip([list_newsSrc, list_keyPpl, list_keyRgn, list_keyOrg, list_urlAtclSumm] , ['news_source', 'key_people', 'region', 'key_organizations', 'news_url']):
             if len(var_yy) > 0 :
                 var_yy = ', '.join(var_yy)
-
                 list_valUpld.append(var_yy)
                 list_colUpld.append(var_col)
 
-        df_var = pd.DataFrame([list_valUpld], columns = list_colUpld)
-
-        news_connectSQL.uploadSQLQuery(df_var, 'news_articles')
-
-        var_outputStr = f"""article {str(var_atclId)} with headline {str(var_rcmdHdln)[ : 50]} successfully uploaded """
+        if (var_rplcAtclId == 'y') or (var_rplcAtclId == 'yes'):
+            news_connectSQL.replaceSQLQuery('news_articles', 'article_id', var_atclId, list_colUpld, list_valUpld, upload_to_sql = 'y' )
+            var_outputStr = f"""article {str(var_atclId)} with headline {str(var_rcmdHdln)[ : 50]} REPLACED uploaded """
+        else:
+            df_var = pd.DataFrame([list_valUpld], columns = list_colUpld)
+            news_connectSQL.uploadSQLQuery(df_var, 'news_articles')
+            var_outputStr = f"""article {str(var_atclId)} with headline {str(var_rcmdHdln)[ : 50]} successfully uploaded """
 
         news_connectSQL.replaceSQLQuery('article_pipeline', ['article_id', 'article_status'], [var_atclId, 0], ['article_status', 'updated_at'], [ 1, datetime.now()], upload_to_sql = 'y') 
 

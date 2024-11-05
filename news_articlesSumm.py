@@ -249,51 +249,51 @@ var_iNUrl = 0
 var_iFail = 0
 var_iAsgn = 0
 
-try:
-    df_atclPpln = news_connectSQL.downloadSQLQuery('article_pipeline', check_col = 'article_status', check_value = 0)
+# try:
+df_atclPpln = news_connectSQL.downloadSQLQuery('article_pipeline', check_col = 'article_status', check_value = 0)
 
-    df_atclPpln.sort_values(by = 'created_at', ascending = False, inplace = True)
+df_atclPpln.sort_values(by = 'created_at', ascending = False, inplace = True)
 
-    list_atclId = df_atclPpln.article_id.unique()[ : 550]
+list_atclId = df_atclPpln.article_id.unique()[ : 550]
 
-    var_len = len(list_atclId)
+var_len = len(list_atclId)
 
-    print(str(len(list_atclId)), ' articles to add to news_articles table' )
+print(str(len(list_atclId)), ' articles to add to news_articles table' )
 
-    for var_atclId in list_atclId:
-        # print(var_atclId)
-        df_atclSumm_var = news_connectSQL.downloadSQLQuery('news_articles', check_col = 'article_id', check_value = var_atclId)
-        df_atclPpln_var = news_connectSQL.downloadSQLQuery('article_pipeline', check_col = ['article_id', 'article_status'], check_value = [var_atclId, 0])
-        var_i += 1
-        var_counterStr = f"""{str(var_i)} of {str(var_len)}  """
+for var_atclId in list_atclId:
+    # print(var_atclId)
+    # df_atclSumm_var = news_connectSQL.downloadSQLQuery('news_articles', check_col = 'article_id', check_value = var_atclId)
+    df_atclPpln_var = news_connectSQL.downloadSQLQuery('article_pipeline', check_col = ['article_id', 'article_status'], check_value = [var_atclId, 0])
+    var_i += 1
+    var_counterStr = f"""{str(var_i)} of {str(var_len)}  """
 
-        var_str_1 = var_counterStr + str(var_atclId) + ' '
+    var_str_1 = var_counterStr + str(var_atclId) + ' '
 
-        if (df_atclSumm_var.empty == False):
-            news_connectSQL.deleteSQLRow('news_articles', 'article_id', var_atclId, confirm_delete = 'y')
-            var_str_1 += ' atcl to be REPLACED; '
+    # if (df_atclSumm_var.empty == False):
+    #     news_connectSQL.deleteSQLRow('news_articles', 'article_id', var_atclId, confirm_delete = 'y')
+    #     var_str_1 += ' atcl to be REPLACED; '
 
-        if (df_atclPpln_var.empty == False):
-            # try:
-            var_str_1 += news_articlesFunc.createAtclSumm(var_atclId)
+    if (df_atclPpln_var.empty == False):
+        # try:
+        var_str_1 += news_articlesFunc.createAtclSumm(var_atclId)
 
-            if 'successfully uploaded' in var_str_1:
-                var_iSccs += 1
-            elif 'no URLs' in var_str_1:
-                var_iNUrl += 1
-            elif 'upload FAILED' in var_str_1:
-                var_iFail += 1
-            else:
-                pass
+        if 'successfully uploaded' in var_str_1:
+            var_iSccs += 1
+        elif 'no URLs' in var_str_1:
+            var_iNUrl += 1
+        elif 'upload FAILED' in var_str_1:
+            var_iFail += 1
         else:
-            var_str_1 += ' article already assigned'
-            var_iAsgn += 1
-        print(var_str_1)
+            pass
+    else:
+        var_str_1 += ' article already assigned'
+        var_iAsgn += 1
+    print(var_str_1)
 
-    var_outputStr += f"""article_id allocated: {str(var_iSccs)}\narticle_id with no url {str(var_iNUrl)}\narticle_id with ERROR {str(var_iFail)}article_id already assigned {str(var_iAsgn)}\n"""
-except:
-    var_outputStr += f"""article_id allocated: {str(var_iSccs)}\narticle_id with no url {str(var_iNUrl)}\narticle_id with ERROR {str(var_iFail)}article_id already assigned {str(var_iAsgn)}\n"""
-    var_outputStr += f""" ERROR article writing"""
+var_outputStr += f"""article_id allocated: {str(var_iSccs)}\narticle_id with no url {str(var_iNUrl)}\narticle_id with ERROR {str(var_iFail)}article_id already assigned {str(var_iAsgn)}\n"""
+# except:
+#     var_outputStr += f"""article_id allocated: {str(var_iSccs)}\narticle_id with no url {str(var_iNUrl)}\narticle_id with ERROR {str(var_iFail)}article_id already assigned {str(var_iAsgn)}\n"""
+#     var_outputStr += f""" ERROR article writing"""
 var_outputStr += f"""\n****** article writing END on {datetime.now().strftime('%Y-%m-%d %H:%M')}******\n\n"""
 
 # ======================= create news article END =======================
